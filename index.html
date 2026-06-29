@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Duka la Dawa — EDM</title>
+<meta name="theme-color" content="#0f4c81">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;}
+.hidden{display:none!important;}
+
+/* ===== SETUP / REGISTER ===== */
+.setup-bg{min-height:100vh;background:linear-gradient(135deg,#0f4c81,#1a7a5e);display:flex;align-items:center;justify-content:center;padding:16px;}
+.setup-card{background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.logo-icon{width:64px;height:64px;background:linear-gradient(135deg,#0f4c81,#1a7a5e);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:28px;}
+.setup-title{font-size:18px;font-weight:700;color:#1a2e44;text-align:center;}
+.setup-sub{font-size:12px;color:#64748b;text-align:center;margin-top:3px;}
+.setup-steps{display:flex;gap:6px;margin:16px 0;}
+.step{flex:1;height:4px;border-radius:2px;background:#e2e8f0;}
+.step.done{background:#0f4c81;}
+.step.active{background:#1a7a5e;}
+.fg{display:flex;flex-direction:column;gap:3px;margin-bottom:10px;}
+.fg label{font-size:12px;color:#64748b;font-weight:500;}
+.fg input,.fg select{width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:15px;color:#1a2e44;background:#f8fafc;}
+.fg input:focus,.fg select:focus{outline:none;border-color:#0f4c81;background:#fff;}
+.half{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0;}
+.half .fg{margin-bottom:0;}
+.btn-p{background:linear-gradient(135deg,#0f4c81,#1a7a5e);color:#fff;border:none;padding:12px;border-radius:11px;cursor:pointer;font-size:14px;font-weight:600;width:100%;margin-top:8px;}
+.btn-outline{background:#fff;color:#0f4c81;border:1.5px solid #0f4c81;padding:11px;border-radius:11px;cursor:pointer;font-size:14px;font-weight:500;width:100%;margin-top:6px;}
+.powered{text-align:center;font-size:10px;color:#94a3b8;margin-top:14px;}
+.powered span{color:#0f4c81;font-weight:700;}
+
+/* ===== LOGIN ===== */
+.login-bg{min-height:100vh;background:linear-gradient(135deg,#0f4c81,#1a7a5e);display:flex;align-items:center;justify-content:center;padding:16px;}
+.login-card{background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.role-tabs{display:flex;gap:6px;margin:16px 0 14px;background:#f1f5f9;border-radius:10px;padding:4px;}
+.role-tab{flex:1;padding:9px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:500;color:#64748b;background:transparent;}
+.role-tab.active{background:#fff;color:#0f4c81;box-shadow:0 1px 4px rgba(0,0,0,.12);}
+.btn-login{width:100%;padding:13px;background:linear-gradient(135deg,#0f4c81,#1a7a5e);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-top:6px;}
+.login-hint{font-size:11px;color:#94a3b8;text-align:center;margin-top:10px;}
+.link-btn{background:none;border:none;color:#0f4c81;font-size:12px;cursor:pointer;text-decoration:underline;margin-top:8px;display:block;text-align:center;}
+
+/* ===== APP ===== */
+.app-bg{min-height:100vh;background:linear-gradient(135deg,#0f4c81,#1a7a5e);padding:12px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:6px;}
+.duka-name{font-size:15px;font-weight:700;color:#fff;}
+.duka-sub{font-size:11px;color:rgba(255,255,255,.7);}
+.top-right{display:flex;gap:5px;align-items:center;}
+.lang-btn{padding:5px 9px;border-radius:20px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);cursor:pointer;font-size:11px;font-weight:500;}
+.lang-btn.active{background:rgba(255,255,255,.95);color:#0f4c81;}
+.logout-btn{padding:5px 9px;border-radius:20px;border:1px solid rgba(255,80,80,.4);background:rgba(255,80,80,.15);color:#fca5a5;cursor:pointer;font-size:11px;}
+.bottom-nav{display:flex;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);border-radius:14px;overflow:hidden;margin-bottom:12px;}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 4px;border:none;background:transparent;color:rgba(255,255,255,.5);cursor:pointer;font-size:10px;font-weight:500;}
+.bnav-btn.active{color:#fff;background:rgba(255,255,255,.2);}
+.bnav-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.page{display:none;}.page.active{display:block;}
+.card{background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;}
+.card-dark{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:14px;margin-bottom:10px;}
+.sec-title{font-size:14px;font-weight:600;color:#1a2e44;margin-bottom:10px;}
+.sec-title-light{font-size:14px;font-weight:600;color:#fff;margin-bottom:10px;}
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px;}
+.stat{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:11px;}
+.stat-label{font-size:11px;color:rgba(255,255,255,.7);margin-bottom:2px;}
+.stat-value{font-size:16px;font-weight:700;color:#fff;word-break:break-all;}
+.stat-sub{font-size:10px;color:rgba(255,255,255,.5);margin-top:1px;}
+.fg2{display:flex;flex-direction:column;gap:3px;margin-bottom:10px;}
+.fg2 label{font-size:12px;color:#64748b;font-weight:500;}
+.fg2 input,.fg2 select{width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:15px;color:#1a2e44;background:#f8fafc;}
+.fg2 input:focus,.fg2 select:focus{outline:none;border-color:#0f4c81;}
+.half2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.half2 .fg2{margin-bottom:0;}
+.btn-action{background:linear-gradient(135deg,#0f4c81,#1a7a5e);color:#fff;border:none;padding:12px;border-radius:11px;cursor:pointer;font-size:14px;font-weight:600;width:100%;margin-top:4px;}
+.btn-sm{padding:5px 9px;font-size:11px;border-radius:7px;border:none;cursor:pointer;font-weight:500;}
+.btn-del{background:#fee2e2;color:#991b1b;}
+.btn-add-s{background:#dbeafe;color:#1e40af;}
+.btn-export{width:100%;padding:11px;font-size:13px;border-radius:11px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;font-weight:500;}
+.search-wrap{position:relative;margin-bottom:10px;}
+.search-wrap input{width:100%;padding:10px 12px 10px 34px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;background:#f8fafc;}
+.si{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#94a3b8;width:16px;height:16px;}
+.barcode-row{display:flex;gap:6px;margin-bottom:10px;}
+.barcode-row input{flex:1;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;background:#f8fafc;}
+.barcode-row button{padding:10px 14px;border:none;border-radius:10px;background:#0f4c81;color:#fff;cursor:pointer;font-size:13px;font-weight:500;white-space:nowrap;}
+.drug-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #f1f5f9;}
+.drug-row:last-child{border-bottom:none;}
+.drug-name{font-size:13px;font-weight:500;color:#1a2e44;}
+.drug-meta{font-size:11px;color:#94a3b8;margin-top:1px;}
+.drug-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+.badge{display:inline-block;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:600;}
+.badge-ok{background:#d1fae5;color:#065f46;}
+.badge-low{background:#fef3c7;color:#92400e;}
+.badge-out{background:#fee2e2;color:#991b1b;}
+.alert{padding:8px 11px;border-radius:9px;margin-bottom:7px;font-size:12px;display:flex;align-items:center;gap:6px;font-weight:500;}
+.alert-w{background:rgba(251,191,36,.2);color:#fbbf24;border:1px solid rgba(251,191,36,.3);}
+.alert-d{background:rgba(239,68,68,.2);color:#f87171;border:1px solid rgba(239,68,68,.3);}
+.sale-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.1);}
+.sale-row:last-child{border-bottom:none;}
+.sale-name{font-size:13px;font-weight:500;color:#fff;}
+.sale-meta{font-size:11px;color:rgba(255,255,255,.5);}
+.sale-amt{font-size:13px;font-weight:700;color:#6ee7b7;}
+.empty-d{text-align:center;padding:1.5rem;color:rgba(255,255,255,.4);font-size:13px;}
+.empty-w{text-align:center;padding:1.5rem;color:#94a3b8;font-size:13px;}
+.profit-pos{color:#6ee7b7;}.profit-neg{color:#f87171;}
+.sell-item{display:flex;align-items:center;gap:10px;padding:10px 8px;border-bottom:1px solid #f1f5f9;cursor:pointer;border-radius:8px;transition:background .1s;}
+.sell-item:last-child{border-bottom:none;}
+.sell-item.selected{background:#eff6ff;}
+.sell-check{width:20px;height:20px;border-radius:6px;border:2px solid #cbd5e1;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.sell-item.selected .sell-check{background:#0f4c81;border-color:#0f4c81;}
+.sell-check-inner{width:10px;height:10px;border-radius:2px;background:#fff;display:none;}
+.sell-item.selected .sell-check-inner{display:block;}
+.sell-iname{font-size:13px;font-weight:500;color:#1a2e44;flex:1;}
+.sell-imeta{font-size:11px;color:#94a3b8;}
+.sell-iprice{font-size:13px;font-weight:600;color:#0f4c81;}
+.sell-istock{font-size:10px;color:#94a3b8;}
+.cart-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f1f5f9;}
+.cart-item:last-child{border-bottom:none;}
+.qty-btn{width:30px;height:30px;border-radius:8px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#1a2e44;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;font-weight:700;}
+.qty-num{font-size:15px;font-weight:700;color:#0f4c81;min-width:24px;text-align:center;}
+.cart-total-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0 0;border-top:2px solid #f1f5f9;margin-top:4px;}
+.cart-total-val{font-size:18px;font-weight:700;color:#0f4c81;}
+.time-filter{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
+.tf-btn{padding:6px 11px;border-radius:20px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);cursor:pointer;font-size:12px;font-weight:500;}
+.tf-btn.active{background:rgba(255,255,255,.9);color:#0f4c81;}
+.custom-range{display:flex;gap:6px;margin-bottom:10px;}
+.custom-range input{flex:1;padding:8px 10px;border:1px solid rgba(255,255,255,.25);border-radius:9px;background:rgba(255,255,255,.1);color:#fff;font-size:12px;}
+.custom-range input::-webkit-calendar-picker-indicator{filter:invert(1);}
+.report-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.1);}
+.report-row:last-child{border-bottom:none;}
+.modal-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;padding:16px;}
+.modal-wrap.open{display:flex;}
+.modal-box{background:#fff;border-radius:16px;padding:20px;width:100%;max-width:340px;}
+.modal-title{font-size:15px;font-weight:700;color:#1a2e44;margin-bottom:12px;}
+.modal-btns{display:flex;gap:8px;margin-top:12px;}
+.modal-btns button{flex:1;padding:11px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;}
+.mbtn-c{border:1.5px solid #e2e8f0;background:#f8fafc;color:#64748b;}
+.mbtn-ok{border:none;background:linear-gradient(135deg,#0f4c81,#1a7a5e);color:#fff;}
+.mbtn-del{border:none;background:#dc2626;color:#fff;}
+
+/* ===== EFD / RECEIPT PRINT ===== */
+.efd-receipt{font-family:'Courier New',monospace;font-size:12px;max-width:300px;margin:0 auto;background:#fff;padding:12px;border-radius:8px;border:1px solid #e2e8f0;}
+.efd-header{text-align:center;border-bottom:1px dashed #333;padding-bottom:8px;margin-bottom:8px;}
+.efd-shop{font-size:14px;font-weight:700;letter-spacing:1px;}
+.efd-tin{font-size:10px;color:#555;}
+.efd-body .line{display:flex;justify-content:space-between;padding:2px 0;font-size:11px;}
+.efd-body .line-title{font-size:10px;color:#555;border-top:1px dashed #ccc;padding-top:4px;margin-top:4px;}
+.efd-total{display:flex;justify-content:space-between;font-weight:700;font-size:13px;border-top:1px dashed #333;border-bottom:1px dashed #333;padding:5px 0;margin:6px 0;}
+.efd-qr{text-align:center;margin:8px 0;}
+.efd-footer{text-align:center;font-size:10px;color:#555;margin-top:6px;}
+.efd-serial{font-size:9px;color:#888;text-align:center;letter-spacing:2px;}
+.print-btns{display:flex;gap:6px;margin-top:10px;}
+.print-btns button{flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-size:13px;font-weight:600;}
+.btn-print{background:#0f4c81;color:#fff;}
+.btn-bt{background:#1a7a5e;color:#fff;}
+
+/* ===== CAMERA SCANNER ===== */
+.scanner-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+.scanner-overlay.open{display:flex;}
+.scanner-box{position:relative;width:280px;height:220px;border:3px solid #6ee7b7;border-radius:12px;overflow:hidden;}
+.scanner-box video{width:100%;height:100%;object-fit:cover;}
+.scanner-line{position:absolute;top:0;left:0;right:0;height:2px;background:#6ee7b7;animation:scan 2s linear infinite;}
+@keyframes scan{0%{top:0}100%{top:100%}}
+.scanner-close{padding:10px 24px;border-radius:20px;border:none;background:#fff;color:#0f4c81;font-weight:700;cursor:pointer;font-size:14px;}
+
+/* ===== BT PRINTER STATUS ===== */
+.bt-status{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;}
+.bt-connected{background:#d1fae5;color:#065f46;}
+.bt-disconnected{background:#fee2e2;color:#991b1b;}
+
+/* ===== PRINT STYLES ===== */
+@media print{
+  body>*:not(#print-area){display:none!important;}
+  #print-area{display:block!important;padding:0;margin:0;}
+  .no-print{display:none!important;}
+}
+#print-area{display:none;}
+
+/* ===== EDM WATERMARK ===== */
+.edm-badge{position:fixed;bottom:8px;right:10px;font-size:9px;color:rgba(255,255,255,.25);font-weight:700;letter-spacing:1px;z-index:10;pointer-events:none;}
+</style>
+</head>
+<body>
+
+<!-- EDM WATERMARK -->
+<div class="edm-badge">Powered by EDM</div>
+
+<!-- PRINT AREA -->
+<div id="print-area"></div>
+
+<!-- ===== SETUP WIZARD ===== -->
+<div id="setup-screen" class="setup-bg">
+  <div class="setup-card">
+    <div style="text-align:center;margin-bottom:16px;">
+      <div class="logo-icon">💊</div>
+      <div class="setup-title" id="sw-title">Karibu! Sanidi Duka Lako</div>
+      <div class="setup-sub" id="sw-sub">Hatua 1 ya 3 — Taarifa za Duka</div>
+    </div>
+    <div class="setup-steps">
+      <div class="step active" id="st0"></div>
+      <div class="step" id="st1"></div>
+      <div class="step" id="st2"></div>
+    </div>
+
+    <!-- Step 1: Shop Info -->
+    <div id="setup-step1">
+      <div class="fg"><label>Jina la Duka *</label><input type="text" id="s1-name" placeholder="k.m. Duka la Afya Mwanza"></div>
+      <div class="fg"><label>Mahali (Mji/Mtaa) *</label><input type="text" id="s1-loc" placeholder="k.m. Mwanza, Nyamagana"></div>
+      <div class="fg"><label>Nambari ya Simu *</label><input type="tel" id="s1-phone" placeholder="+255 ..."></div>
+      <div class="fg"><label>TIN Number (hiari — kwa EFD)</label><input type="text" id="s1-tin" placeholder="k.m. 100-000-000"></div>
+      <div class="fg"><label>VRN / VAT Number (hiari)</label><input type="text" id="s1-vrn" placeholder="k.m. 40-000000-T"></div>
+      <button class="btn-p" onclick="setupNext(2)">Endelea →</button>
+    </div>
+
+    <!-- Step 2: Owner Account -->
+    <div id="setup-step2" class="hidden">
+      <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;color:#0369a1;">
+        🔒 Tengeneza akaunti ya Mmiliki (admin)
+      </div>
+      <div class="fg"><label>Jina kamili la Mmiliki *</label><input type="text" id="s2-oname" placeholder="k.m. Juma Hassan"></div>
+      <div class="fg"><label>Username ya Mmiliki *</label><input type="text" id="s2-ouser" placeholder="k.m. admin"></div>
+      <div class="half">
+        <div class="fg"><label>Nenosiri *</label><input type="password" id="s2-opw" placeholder="••••••"></div>
+        <div class="fg"><label>Rudia Nenosiri *</label><input type="password" id="s2-opw2" placeholder="••••••"></div>
+      </div>
+      <hr style="margin:12px 0;border-color:#f1f5f9;">
+      <div style="font-size:12px;color:#64748b;margin-bottom:8px;font-weight:600;">👤 Tengeneza akaunti ya Mwuzaji</div>
+      <div class="fg"><label>Jina la Mwuzaji *</label><input type="text" id="s2-sname" placeholder="k.m. Fatuma Ali"></div>
+      <div class="fg"><label>Username ya Mwuzaji *</label><input type="text" id="s2-suser" placeholder="k.m. seller"></div>
+      <div class="half">
+        <div class="fg"><label>Nenosiri *</label><input type="password" id="s2-spw" placeholder="••••••"></div>
+        <div class="fg"><label>Rudia *</label><input type="password" id="s2-spw2" placeholder="••••••"></div>
+      </div>
+      <button class="btn-p" onclick="setupNext(3)">Endelea →</button>
+      <button class="btn-outline" onclick="setupNext(1)">← Rudi</button>
+    </div>
+
+    <!-- Step 3: Printer Setup -->
+    <div id="setup-step3" class="hidden">
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;color:#166534;">
+        🖨️ Sanidi Printer (unaweza kuruka hatua hii)
+      </div>
+      <div class="fg">
+        <label>Aina ya Printer</label>
+        <select id="s3-printer">
+          <option value="none">Sina printer sasa</option>
+          <option value="browser">Print ya browser (kawaida)</option>
+          <option value="bluetooth">Bluetooth Thermal Printer</option>
+        </select>
+      </div>
+      <div class="fg"><label>Jina la Printer ya Bluetooth (kama una)</label><input type="text" id="s3-btname" placeholder="k.m. POS-80"></div>
+      <div style="background:#fef3c7;border:1px solid #fbbf24;border-radius:8px;padding:8px;font-size:11px;color:#92400e;margin-bottom:10px;">
+        ⚠️ Bluetooth printing inahitaji Chrome au Edge browser na printer inayounga mkono ESC/POS.
+      </div>
+      <button class="btn-p" onclick="setupFinish()">✅ Maliza Usanidi</button>
+      <button class="btn-outline" onclick="setupNext(2)">← Rudi</button>
+    </div>
+
+    <div class="powered">Mfumo huu umetengenezwa na <span>EDM</span> · v2.0</div>
+  </div>
+</div>
+
+<!-- ===== LOGIN ===== -->
+<div id="login-screen" class="login-bg hidden">
+  <div class="login-card">
+    <div style="text-align:center;margin-bottom:14px;">
+      <div class="logo-icon" style="width:52px;height:52px;font-size:22px;">💊</div>
+      <div class="setup-title" id="ln-shop">Duka la Dawa</div>
+      <div class="setup-sub">Mfumo wa Mauzo</div>
+    </div>
+    <div class="role-tabs">
+      <button class="role-tab active" id="tab-o" onclick="switchRole('owner')">👑 Mmiliki</button>
+      <button class="role-tab" id="tab-s" onclick="switchRole('seller')">🛒 Mwuzaji</button>
+    </div>
+    <div class="fg" style="margin-bottom:10px;"><label>Username</label><input type="text" id="li-user" placeholder="Username" autocomplete="username"></div>
+    <div class="fg" style="margin-bottom:10px;"><label>Nenosiri</label><input type="password" id="li-pw" placeholder="••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn-login" onclick="doLogin()">Ingia</button>
+    <div class="login-hint" id="li-hint"></div>
+    <button class="link-btn" onclick="showSetup()">+ Ongeza akaunti mpya</button>
+    <div class="powered" style="margin-top:10px;">Powered by <span>EDM</span></div>
+  </div>
+</div>
+
+<!-- ===== OWNER APP ===== -->
+<div id="owner-app" class="app-bg hidden">
+  <div class="topbar">
+    <div><div class="duka-name" id="o-dn">Duka</div><div class="duka-sub">👑 Mmiliki</div></div>
+    <div class="top-right">
+      <button class="lang-btn active" onclick="setLang('sw')" id="ol-sw">SW</button>
+      <button class="lang-btn" onclick="setLang('en')" id="ol-en">EN</button>
+      <button class="logout-btn" onclick="logout()">↩</button>
+    </div>
+  </div>
+  <div class="bottom-nav" id="o-nav">
+    <button class="bnav-btn active" onclick="oP('dash',0)"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span id="on0"></span></button>
+    <button class="bnav-btn" onclick="oP('stock',1)"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg><span id="on1"></span></button>
+    <button class="bnav-btn" onclick="oP('report',2)"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span id="on2"></span></button>
+    <button class="bnav-btn" onclick="oP('settings',3)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span id="on3"></span></button>
+  </div>
+  <div id="op-dash" class="page active">
+    <div class="stats-grid" id="o-stats"></div>
+    <div id="o-alerts"></div>
+    <div class="card-dark"><div class="sec-title-light" id="o-lbl-rec">Mauzo ya hivi karibuni</div><div id="o-recent"></div></div>
+  </div>
+  <div id="op-stock" class="page">
+    <div class="card">
+      <div class="sec-title" id="o-lbl-add">Ongeza dawa mpya</div>
+      <!-- Barcode scan row -->
+      <div class="barcode-row">
+        <input type="text" id="o-barcode" placeholder="Scan barcode au andika..." onkeydown="if(event.key==='Enter')lookupBarcode('o-barcode')">
+        <button onclick="openCamScanner('stock')">📷 Scan</button>
+      </div>
+      <div class="fg2"><label>Jina la Dawa *</label><input type="text" id="oi-name" placeholder="k.m. Panadol 500mg"></div>
+      <div class="fg2"><label>Barcode (hiari)</label><input type="text" id="oi-barcode" placeholder="k.m. 5000168014978"></div>
+      <div class="fg2"><label>Aina</label>
+        <select id="oi-cat">
+          <option value="Painkillers">Painkillers / Maumivu</option>
+          <option value="Antibiotics">Antibiotics / Antibiotiki</option>
+          <option value="Antimalarials">Antimalarials / Malaria</option>
+          <option value="Vitamins">Vitamins / Vitamini</option>
+          <option value="Antihypertensives">Antihypertensives / Shinikizo</option>
+          <option value="Other">Other / Nyingine</option>
+        </select>
+      </div>
+      <div class="half2">
+        <div class="fg2"><label>Bei ya Kununua (TZS)</label><input type="number" id="oi-buy" placeholder="0"></div>
+        <div class="fg2"><label>Bei ya Kuuza (TZS)</label><input type="number" id="oi-sell" placeholder="0"></div>
+      </div>
+      <div class="half2">
+        <div class="fg2"><label>Idadi</label><input type="number" id="oi-qty" placeholder="0"></div>
+        <div class="fg2"><label>Kiwango cha chini</label><input type="number" id="oi-min" placeholder="10"></div>
+      </div>
+      <button class="btn-action" onclick="addDrug()">+ Ongeza Dawa</button>
+    </div>
+    <div class="card">
+      <div class="sec-title" id="o-lbl-all">Dawa zote</div>
+      <div class="search-wrap">
+        <svg class="si" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="o-search" placeholder="Tafuta dawa au barcode..." oninput="renderOStock()">
+      </div>
+      <div id="o-stock-list"></div>
+    </div>
+  </div>
+  <div id="op-report" class="page">
+    <div class="time-filter" id="o-tf"></div>
+    <div id="o-cr" class="custom-range hidden">
+      <input type="date" id="o-df"><input type="date" id="o-dt">
+      <button style="padding:8px 12px;border-radius:9px;border:none;background:rgba(255,255,255,.9);color:#0f4c81;font-weight:600;cursor:pointer;font-size:12px;" onclick="renderOReport()">Go</button>
+    </div>
+    <button class="btn-export" onclick="dlPDF()">📄 <span id="o-btn-pdf">Pakua PDF</span></button>
+    <button class="btn-export" onclick="dlExcel()">📊 <span id="o-btn-excel">Pakua Excel</span></button>
+    <div class="stats-grid" id="o-r-stats"></div>
+    <div class="card-dark"><div class="sec-title-light" id="o-lbl-hist">Historia ya Mauzo</div><div id="o-r-list"></div></div>
+  </div>
+  <div id="op-settings" class="page">
+    <div class="card">
+      <div class="sec-title">Mipangilio ya Duka</div>
+      <div class="fg2"><label>Jina la Duka</label><input type="text" id="os-name"></div>
+      <div class="fg2"><label>Mahali</label><input type="text" id="os-loc"></div>
+      <div class="fg2"><label>Simu</label><input type="text" id="os-phone"></div>
+      <div class="fg2"><label>TIN Number</label><input type="text" id="os-tin"></div>
+      <div class="fg2"><label>VRN / VAT</label><input type="text" id="os-vrn"></div>
+      <button class="btn-action" onclick="saveShopSettings()">Hifadhi</button>
+    </div>
+    <div class="card">
+      <div class="sec-title">Usimamizi wa Akaunti</div>
+      <div id="accounts-list"></div>
+      <button class="btn-action" style="margin-top:8px;" onclick="openAddAccountModal()">+ Ongeza Mwuzaji</button>
+    </div>
+    <div class="card">
+      <div class="sec-title">🖨️ Printer</div>
+      <div class="fg2"><label>Aina ya Printer</label>
+        <select id="os-printer">
+          <option value="none">Bila printer</option>
+          <option value="browser">Browser Print</option>
+          <option value="bluetooth">Bluetooth Thermal</option>
+        </select>
+      </div>
+      <div class="fg2"><label>Jina la Bluetooth Printer</label><input type="text" id="os-btname" placeholder="k.m. POS-80"></div>
+      <button class="btn-action" onclick="savePrinterSettings()">Hifadhi Printer</button>
+      <div id="bt-status-display" style="margin-top:8px;"></div>
+    </div>
+    <div class="card" style="border:1px solid #e2e8f0;">
+      <div style="font-size:11px;color:#94a3b8;text-align:center;padding:6px 0;">
+        🛠️ Mfumo huu umetengenezwa na <strong style="color:#0f4c81;">EDM</strong><br>
+        Mawasiliano: edm@developer.co.tz · v2.0<br>
+        <span style="font-size:10px;">Powered by EDM — All rights reserved</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SELLER APP ===== -->
+<div id="seller-app" class="app-bg hidden">
+  <div class="topbar">
+    <div><div class="duka-name" id="s-dn">Duka</div><div class="duka-sub">🛒 Mwuzaji — <span id="s-seller-name"></span></div></div>
+    <div class="top-right">
+      <button class="lang-btn active" onclick="setLang('sw')" id="sl-sw">SW</button>
+      <button class="lang-btn" onclick="setLang('en')" id="sl-en">EN</button>
+      <button class="logout-btn" onclick="logout()">↩</button>
+    </div>
+  </div>
+  <div class="bottom-nav" id="s-nav">
+    <button class="bnav-btn active" onclick="sP('sell',0)"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 001.95-1.57L23 6H6"/></svg><span id="sn0">Uza</span></button>
+    <button class="bnav-btn" onclick="sP('sreport',1)"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span id="sn1">Ripoti</span></button>
+  </div>
+  <div id="sp-sell" class="page active">
+    <div class="card">
+      <div class="sec-title" id="s-lbl-sel">Chagua Dawa za Kuuza</div>
+      <!-- Barcode scan for seller -->
+      <div class="barcode-row">
+        <input type="text" id="s-barcode" placeholder="Scan barcode..." onkeydown="if(event.key==='Enter')sellByBarcode()">
+        <button onclick="openCamScanner('sell')">📷 Scan</button>
+      </div>
+      <div class="search-wrap">
+        <svg class="si" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="s-search" placeholder="Tafuta dawa..." oninput="renderSellList()">
+      </div>
+      <div id="s-sell-list"></div>
+    </div>
+    <div class="card" id="s-cart-card" style="display:none;">
+      <div class="sec-title">🛒 Vikapu</div>
+      <div id="s-cart-list"></div>
+      <div class="cart-total-row">
+        <div style="font-size:14px;font-weight:600;color:#1a2e44;">JUMLA</div>
+        <div class="cart-total-val" id="s-cart-total">TZS 0</div>
+      </div>
+      <button class="btn-action" onclick="confirmSale()" style="margin-top:10px;">✅ Thibitisha Mauzo</button>
+    </div>
+    <div class="card" id="s-receipt-card" style="display:none;">
+      <div class="sec-title">🧾 Stakabadhi / EFD Receipt</div>
+      <div id="s-receipt"></div>
+    </div>
+  </div>
+  <div id="sp-sreport" class="page">
+    <div class="time-filter" id="s-tf"></div>
+    <div id="s-cr" class="custom-range hidden">
+      <input type="date" id="s-df"><input type="date" id="s-dt">
+      <button style="padding:8px 12px;border-radius:9px;border:none;background:rgba(255,255,255,.9);color:#0f4c81;font-weight:600;cursor:pointer;font-size:12px;" onclick="renderSReport()">Go</button>
+    </div>
+    <div class="stats-grid" id="s-r-stats"></div>
+    <div class="card-dark"><div class="sec-title-light">Historia ya Mauzo Yangu</div><div id="s-r-list"></div></div>
+  </div>
+</div>
+
+<!-- Camera Scanner -->
+<div class="scanner-overlay" id="scanner-overlay">
+  <div style="color:#fff;font-size:14px;font-weight:600;">📷 Lenga barcode</div>
+  <div class="scanner-box"><video id="scanner-video" autoplay playsinline></video><div class="scanner-line"></div></div>
+  <div style="color:rgba(255,255,255,.7);font-size:12px;">Inascan...</div>
+  <button class="scanner-close" onclick="closeCamScanner()">✕ Funga</button>
+</div>
+
+<!-- Modals -->
+<div class="modal-wrap" id="del-modal">
+  <div class="modal-box">
+    <div class="modal-title">⚠️ Thibitisha Kufuta</div>
+    <p style="font-size:13px;color:#64748b;" id="del-msg"></p>
+    <div class="modal-btns"><button class="mbtn-c" onclick="closeModal('del-modal')">Ghairi</button><button class="mbtn-del" onclick="confirmDelete()">Futa</button></div>
+  </div>
+</div>
+<div class="modal-wrap" id="add-stock-modal">
+  <div class="modal-box">
+    <div class="modal-title">+ Ongeza Stock</div>
+    <div class="fg2"><label>Ongeza idadi ngapi?</label><input type="number" id="as-qty" min="1" placeholder="0" style="font-size:16px;"></div>
+    <div class="modal-btns"><button class="mbtn-c" onclick="closeModal('add-stock-modal')">Ghairi</button><button class="mbtn-ok" onclick="confirmAddStock()">Ongeza</button></div>
+  </div>
+</div>
+<div class="modal-wrap" id="add-account-modal">
+  <div class="modal-box">
+    <div class="modal-title">👤 Ongeza Mwuzaji</div>
+    <div class="fg2"><label>Jina kamili</label><input type="text" id="aa-name" placeholder="k.m. Amina Hassan"></div>
+    <div class="fg2"><label>Username</label><input type="text" id="aa-user" placeholder="k.m. amina"></div>
+    <div class="fg2"><label>Nenosiri</label><input type="password" id="aa-pw" placeholder="••••••"></div>
+    <div class="modal-btns"><button class="mbtn-c" onclick="closeModal('add-account-modal')">Ghairi</button><button class="mbtn-ok" onclick="confirmAddAccount()">Ongeza</button></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+// ============================
+// STATE
+// ============================
+let lang='sw', role=null, loginRole='owner', currentUser=null;
+let modalDelId=null, modalAddStockId=null;
+let cart={}, oAP='dash', sAP='sell', oTF='day', sTF='day';
+let scannerContext=null, scannerStream=null;
+let btDevice=null, btChar=null;
+let receiptCounter=1;
+
+let db={
+  shop:{name:'',location:'',phone:'',tin:'',vrn:''},
+  accounts:[],
+  drugs:[],
+  sales:[],
+  printer:{type:'browser',btname:''},
+  nid:1, sid:1
+};
+
+function saveDB(){try{localStorage.setItem('edm_db',JSON.stringify(db));}catch(e){}}
+function loadDB(){
+  try{
+    const d=localStorage.getItem('edm_db');
+    if(d){db=JSON.parse(d);db.sales.forEach(s=>s.ts=new Date(s.ts));return true;}
+  }catch(e){}
+  return false;
+}
+
+const isSetup=loadDB();
+if(!isSetup||!db.accounts.length){
+  document.getElementById('setup-screen').classList.remove('hidden');
+}else{
+  document.getElementById('setup-screen').classList.add('hidden');
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('ln-shop').textContent=db.shop.name||'Duka la Dawa';
+  showLoginHint();
+}
+
+// ============================
+// TRANSLATIONS
+// ============================
+const T={
+  sw:{onav:['Muhtasari','Dawa','Ripoti','Mipangilio'],snav:['Uza','Ripoti'],
+    stockval:'Thamani ya Stock',revenue:'Mapato',profit:'Faida Halisi',alerts:'Tahadhari',
+    meds:'Dawa',txns:'Mauzo',ok:'Ipo',low:'Kidogo',out:'Imekwisha',
+    empty:'Hakuna data.',nodrug:'Hakuna dawa.',
+    tf:['Leo','Wiki','Mwezi','Mwaka','Mwenyewe'],
+    pdfdate:'Tarehe',pdftot:'Jumla ya Mapato',pdfcost:'Gharama',pdfprofit:'Faida Halisi',
+    colDrug:'Dawa',colQty:'Idadi',colTotal:'Jumla',colProfit:'Faida',colTime:'Wakati',colCost:'Gharama',
+  },
+  en:{onav:['Dashboard','Stock','Reports','Settings'],snav:['Sell','Report'],
+    stockval:'Stock Value',revenue:'Revenue',profit:'Net Profit',alerts:'Alerts',
+    meds:'Medicines',txns:'Sales',ok:'In Stock',low:'Low',out:'Out of Stock',
+    empty:'No data.',nodrug:'No medicines.',
+    tf:['Today','Week','Month','Year','Custom'],
+    pdfdate:'Date',pdftot:'Total Revenue',pdfcost:'Total Cost',pdfprofit:'Net Profit',
+    colDrug:'Medicine',colQty:'Qty',colTotal:'Total',colProfit:'Profit',colTime:'Time',colCost:'Cost',
+  }
+};
+function t(k){return T[lang][k]||k;}
+function fmt(n){return Number(n).toLocaleString();}
+function statusOf(d){
+  if(d.qty===0)return{cls:'badge-out',txt:t('out')};
+  if(d.qty<=d.min)return{cls:'badge-low',txt:t('low')};
+  return{cls:'badge-ok',txt:t('ok')};
+}
+function setLang(l){
+  lang=l;
+  ['ol-sw','sl-sw'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.toggle('active',l==='sw');});
+  ['ol-en','sl-en'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.toggle('active',l==='en');});
+  if(role==='owner'){applyNavO();renderOPage(oAP);}
+  if(role==='seller'){applyNavS();renderSPage(sAP);}
+}
+
+// ============================
+// SETUP WIZARD
+// ============================
+let currentStep=1;
+function setupNext(step){
+  if(step===2){
+    const name=document.getElementById('s1-name').value.trim();
+    const loc=document.getElementById('s1-loc').value.trim();
+    const phone=document.getElementById('s1-phone').value.trim();
+    if(!name||!loc||!phone){alert('Jaza sehemu zote zilizo na *');return;}
+    db.shop.name=name;db.shop.location=loc;db.shop.phone=phone;
+    db.shop.tin=document.getElementById('s1-tin').value.trim();
+    db.shop.vrn=document.getElementById('s1-vrn').value.trim();
+  }
+  if(step===3){
+    const oname=document.getElementById('s2-oname').value.trim();
+    const ouser=document.getElementById('s2-ouser').value.trim().toLowerCase();
+    const opw=document.getElementById('s2-opw').value;
+    const opw2=document.getElementById('s2-opw2').value;
+    const sname=document.getElementById('s2-sname').value.trim();
+    const suser=document.getElementById('s2-suser').value.trim().toLowerCase();
+    const spw=document.getElementById('s2-spw').value;
+    const spw2=document.getElementById('s2-spw2').value;
+    if(!oname||!ouser||!opw||!sname||!suser||!spw){alert('Jaza sehemu zote zilizo na *');return;}
+    if(opw!==opw2){alert('Nenosiri la mmiliki halifanani!');return;}
+    if(spw!==spw2){alert('Nenosiri la mwuzaji halifanani!');return;}
+    if(ouser===suser){alert('Username za mmiliki na mwuzaji lazima ziwe tofauti');return;}
+    db.accounts=[
+      {id:1,name:oname,username:ouser,password:opw,role:'owner'},
+      {id:2,name:sname,username:suser,password:spw,role:'seller'}
+    ];
+    db.nid=3;
+    // Sample drugs
+    db.drugs=[
+      {id:1,name:'Panadol 500mg',barcode:'5000168014978',cat:'Painkillers',buy:500,sell:1000,qty:50,min:10},
+      {id:2,name:'Amoxicillin 250mg',barcode:'',cat:'Antibiotics',buy:800,sell:1500,qty:8,min:15},
+      {id:3,name:'Vitamin C 500mg',barcode:'',cat:'Vitamins',buy:200,sell:500,qty:100,min:20},
+    ];
+  }
+  currentStep=step;
+  [1,2,3].forEach(i=>{
+    document.getElementById('setup-step'+i).classList.toggle('hidden',i!==step);
+    const el=document.getElementById('st'+(i-1));
+    if(el){el.className='step'+(i<step?' done':i===step?' active':'');}
+  });
+  document.getElementById('sw-sub').textContent=`Hatua ${step} ya 3`;
+}
+
+function setupFinish(){
+  db.printer.type=document.getElementById('s3-printer').value;
+  db.printer.btname=document.getElementById('s3-btname').value.trim();
+  saveDB();
+  document.getElementById('setup-screen').classList.add('hidden');
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('ln-shop').textContent=db.shop.name;
+  showLoginHint();
+}
+
+function showSetup(){
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('setup-screen').classList.remove('hidden');
+  setupNext(1);
+}
+
+// ============================
+// LOGIN
+// ============================
+function switchRole(r){
+  loginRole=r;
+  document.getElementById('tab-o').classList.toggle('active',r==='owner');
+  document.getElementById('tab-s').classList.toggle('active',r==='seller');
+}
+
+function showLoginHint(){
+  const owners=db.accounts.filter(a=>a.role==='owner').map(a=>a.username);
+  const sellers=db.accounts.filter(a=>a.role==='seller').map(a=>a.username);
+  document.getElementById('li-hint').textContent=`Wamiliki: ${owners.join(', ')} · Wauzaji: ${sellers.join(', ')}`;
+}
+
+function doLogin(){
+  const u=document.getElementById('li-user').value.trim().toLowerCase();
+  const p=document.getElementById('li-pw').value;
+  const acc=db.accounts.find(a=>a.username===u&&a.password===p&&a.role===loginRole);
+  if(!acc){alert('Jina au nenosiri si sahihi!');return;}
+  currentUser=acc;role=acc.role;
+  document.getElementById('login-screen').classList.add('hidden');
+  if(role==='owner'){
+    document.getElementById('owner-app').classList.remove('hidden');
+    document.getElementById('o-dn').textContent=db.shop.name;
+    applyNavO();renderOPage('dash');
+  }else{
+    document.getElementById('seller-app').classList.remove('hidden');
+    document.getElementById('s-dn').textContent=db.shop.name;
+    document.getElementById('s-seller-name').textContent=acc.name;
+    applyNavS();renderSPage('sell');
+  }
+}
+
+function logout(){
+  role=null;cart={};currentUser=null;
+  document.getElementById('owner-app').classList.add('hidden');
+  document.getElementById('seller-app').classList.add('hidden');
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('li-user').value='';document.getElementById('li-pw').value='';
+}
+
+// ============================
+// NAV
+// ============================
+function applyNavO(){
+  const nl=t('onav');for(let i=0;i<4;i++){const e=document.getElementById('on'+i);if(e)e.textContent=nl[i];}
+  renderTF('o-tf','o',oTF);
+}
+function applyNavS(){
+  const nl=t('snav');for(let i=0;i<2;i++){const e=document.getElementById('sn'+i);if(e)e.textContent=nl[i];}
+  renderTF('s-tf','s',sTF);
+}
+function renderTF(elId,prefix,active){
+  const tfs=t('tf');const vals=['day','week','month','year','custom'];
+  document.getElementById(elId).innerHTML=tfs.map((l,i)=>`<button class="tf-btn${active===vals[i]?' active':''}" onclick="setTF('${prefix}','${vals[i]}')">${l}</button>`).join('');
+}
+function setTF(p,v){
+  if(p==='o'){oTF=v;renderTF('o-tf','o',v);document.getElementById('o-cr').classList.toggle('hidden',v!=='custom');if(v!=='custom')renderOReport();}
+  else{sTF=v;renderTF('s-tf','s',v);document.getElementById('s-cr').classList.toggle('hidden',v!=='custom');if(v!=='custom')renderSReport();}
+}
+function getRange(f,p){
+  const now=new Date();let from=new Date(),to=new Date();to.setHours(23,59,59,999);
+  if(f==='day'){from.setHours(0,0,0,0);}
+  else if(f==='week'){from.setDate(now.getDate()-now.getDay());from.setHours(0,0,0,0);}
+  else if(f==='month'){from=new Date(now.getFullYear(),now.getMonth(),1);}
+  else if(f==='year'){from=new Date(now.getFullYear(),0,1);}
+  else if(f==='custom'){
+    const fv=document.getElementById(p+'-df').value;const tv=document.getElementById(p+'-dt').value;
+    if(fv)from=new Date(fv+'T00:00:00');if(tv)to=new Date(tv+'T23:59:59');
+  }
+  return{from,to};
+}
+function filterSales(f,p){const{from,to}=getRange(f,p);return db.sales.filter(s=>new Date(s.ts)>=from&&new Date(s.ts)<=to);}
+
+function oP(id,idx){
+  document.querySelectorAll('#owner-app .page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('#o-nav .bnav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('op-'+id).classList.add('active');
+  document.querySelectorAll('#o-nav .bnav-btn')[idx].classList.add('active');
+  oAP=id;applyNavO();renderOPage(id);
+}
+function renderOPage(id){
+  if(id==='dash')renderODash();if(id==='stock')renderOStock();
+  if(id==='report')renderOReport();if(id==='settings')renderOSettings();
+}
+function sP(id,idx){
+  document.querySelectorAll('#seller-app .page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('#s-nav .bnav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sp-'+id).classList.add('active');
+  document.querySelectorAll('#s-nav .bnav-btn')[idx].classList.add('active');
+  sAP=id;applyNavS();renderSPage(id);
+}
+function renderSPage(id){
+  if(id==='sell')renderSellPage();if(id==='sreport')renderSReport();
+}
+
+// ============================
+// OWNER DASHBOARD
+// ============================
+function renderODash(){
+  const sv=db.drugs.reduce((s,d)=>s+d.qty*d.buy,0);
+  const rev=db.sales.reduce((s,m)=>s+m.total,0);
+  const cost=db.sales.reduce((s,m)=>s+m.items.reduce((a,i)=>a+i.buy*i.qty,0),0);
+  const prof=rev-cost;
+  const lc=db.drugs.filter(d=>d.qty>0&&d.qty<=d.min).length;
+  const oc=db.drugs.filter(d=>d.qty===0).length;
+  document.getElementById('o-stats').innerHTML=`
+    <div class="stat"><div class="stat-label">${t('stockval')}</div><div class="stat-value">TZS ${fmt(sv)}</div><div class="stat-sub">${db.drugs.length} ${t('meds')}</div></div>
+    <div class="stat"><div class="stat-label">${t('revenue')}</div><div class="stat-value">TZS ${fmt(rev)}</div><div class="stat-sub">${db.sales.length} ${t('txns')}</div></div>
+    <div class="stat"><div class="stat-label">${t('profit')}</div><div class="stat-value ${prof>=0?'profit-pos':'profit-neg'}">TZS ${fmt(prof)}</div></div>
+    <div class="stat"><div class="stat-label">${t('alerts')}</div><div class="stat-value">${lc+oc}</div><div class="stat-sub">${oc} ${t('out')}, ${lc} ${t('low')}</div></div>`;
+  document.getElementById('o-alerts').innerHTML=db.drugs.filter(d=>d.qty<=d.min).map(d=>`
+    <div class="alert ${d.qty===0?'alert-d':'alert-w'}">⚠ <span><strong>${d.name}</strong> — ${d.qty===0?t('out'):`Iliyobaki: ${d.qty} (min ${d.min})`}</span></div>`).join('');
+  const recent=db.sales.slice(-5).reverse();
+  document.getElementById('o-recent').innerHTML=recent.length?recent.map(m=>`
+    <div class="sale-row"><div><div class="sale-name">${m.items.map(i=>i.name+(i.qty>1?' ×'+i.qty:'')).join(', ')}</div><div class="sale-meta">${m.seller||''} · ${m.time}</div></div><div class="sale-amt">TZS ${fmt(m.total)}</div></div>`).join(''):`<div class="empty-d">${t('empty')}</div>`;
+}
+
+// ============================
+// OWNER STOCK
+// ============================
+function renderOStock(){
+  const q=(document.getElementById('o-search')?.value||'').toLowerCase();
+  const filtered=db.drugs.filter(d=>d.name.toLowerCase().includes(q)||d.cat.toLowerCase().includes(q)||(d.barcode||'').includes(q));
+  document.getElementById('o-stock-list').innerHTML=filtered.length?filtered.map(d=>{
+    const s=statusOf(d);
+    return`<div class="drug-row">
+      <div style="flex:1;min-width:0;">
+        <div class="drug-name">${d.name}${d.barcode?` <span style="font-size:10px;color:#94a3b8;">📦 ${d.barcode}</span>`:''}</div>
+        <div class="drug-meta">${d.cat} · Uza: TZS ${fmt(d.sell)} · Nunua: TZS ${fmt(d.buy)}</div>
+      </div>
+      <div class="drug-right">
+        <span class="badge ${s.cls}">${s.txt}</span>
+        <span style="font-size:12px;color:#94a3b8;">${d.qty} vip.</span>
+        <div style="display:flex;gap:4px;">
+          <button class="btn-sm btn-add-s" onclick="openAddStockModal(${d.id})">+ Stock</button>
+          <button class="btn-sm btn-del" onclick="openDelModal(${d.id})">🗑</button>
+        </div>
+      </div></div>`;}).join(''):`<div class="empty-w">${t('empty')}</div>`;
+}
+
+function addDrug(){
+  const name=document.getElementById('oi-name').value.trim();
+  if(!name){alert('Ingiza jina la dawa');return;}
+  const drug={
+    id:db.nid++,name,
+    barcode:document.getElementById('oi-barcode').value.trim(),
+    cat:document.getElementById('oi-cat').value,
+    buy:parseInt(document.getElementById('oi-buy').value)||0,
+    sell:parseInt(document.getElementById('oi-sell').value)||0,
+    qty:parseInt(document.getElementById('oi-qty').value)||0,
+    min:parseInt(document.getElementById('oi-min').value)||5
+  };
+  db.drugs.push(drug);saveDB();
+  ['oi-name','oi-barcode','oi-buy','oi-sell','oi-qty','oi-min'].forEach(id=>document.getElementById(id).value='');
+  renderOStock();
+}
+
+function lookupBarcode(inputId){
+  const code=document.getElementById(inputId).value.trim();
+  if(!code)return;
+  const d=db.drugs.find(x=>x.barcode===code);
+  if(d){
+    document.getElementById('oi-name').value=d.name;
+    document.getElementById('oi-barcode').value=d.barcode;
+    document.getElementById('oi-cat').value=d.cat;
+    document.getElementById('oi-buy').value=d.buy;
+    document.getElementById('oi-sell').value=d.sell;
+    document.getElementById('oi-min').value=d.min;
+    alert('Dawa imepatikana: '+d.name+'. Ingiza idadi mpya.');
+  }else{
+    document.getElementById('oi-barcode').value=code;
+    alert('Barcode haikupatikana kwenye mfumo. Ingiza taarifa za dawa mpya.');
+  }
+}
+
+function sellByBarcode(){
+  const code=document.getElementById('s-barcode').value.trim();
+  if(!code)return;
+  const d=db.drugs.find(x=>x.barcode===code&&x.qty>0);
+  if(d){
+    if(!cart[d.id])cart[d.id]={drug:d,qty:0};
+    cart[d.id].qty=Math.min(d.qty,cart[d.id].qty+1);
+    document.getElementById('s-barcode').value='';
+    renderSellList();updateCart();
+  }else{
+    alert('Dawa haikupatikana au imekwisha: '+code);
+  }
+}
+
+// ============================
+// BARCODE CAMERA SCANNER
+// ============================
+async function openCamScanner(ctx){
+  scannerContext=ctx;
+  document.getElementById('scanner-overlay').classList.add('open');
+  try{
+    scannerStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    document.getElementById('scanner-video').srcObject=scannerStream;
+    // Note: Real barcode scanning needs a library like ZXing or QuaggaJS
+    // For now we show the camera and let user read manually
+    setTimeout(()=>{
+      const code=prompt('Camera iko tayari!\n\nKwa sasa, andika barcode uliyoona kwenye camera:');
+      closeCamScanner();
+      if(code&&code.trim()){
+        if(ctx==='stock'){document.getElementById('o-barcode').value=code.trim();lookupBarcode('o-barcode');}
+        else{document.getElementById('s-barcode').value=code.trim();sellByBarcode();}
+      }
+    },800);
+  }catch(e){
+    closeCamScanner();
+    alert('Haiwezi kufungua camera. Tumia scanner ya USB au andika barcode mwenyewe.');
+  }
+}
+function closeCamScanner(){
+  if(scannerStream)scannerStream.getTracks().forEach(t=>t.stop());
+  document.getElementById('scanner-overlay').classList.remove('open');
+}
+
+// ============================
+// MODALS
+// ============================
+function openDelModal(id){
+  modalDelId=id;const d=db.drugs.find(x=>x.id===id);
+  document.getElementById('del-msg').textContent='Una uhakika wa kufuta "'+d.name+'"? Haiwezi kurudishwa.';
+  document.getElementById('del-modal').classList.add('open');
+}
+function openAddStockModal(id){
+  modalAddStockId=id;document.getElementById('as-qty').value='';
+  document.getElementById('add-stock-modal').classList.add('open');
+}
+function openAddAccountModal(){
+  ['aa-name','aa-user','aa-pw'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('add-account-modal').classList.add('open');
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function confirmDelete(){db.drugs=db.drugs.filter(d=>d.id!==modalDelId);saveDB();closeModal('del-modal');renderOStock();}
+function confirmAddStock(){
+  const n=parseInt(document.getElementById('as-qty').value);
+  if(isNaN(n)||n<=0)return;
+  const d=db.drugs.find(x=>x.id===modalAddStockId);if(d){d.qty+=n;saveDB();renderOStock();}
+  closeModal('add-stock-modal');
+}
+function confirmAddAccount(){
+  const name=document.getElementById('aa-name').value.trim();
+  const user=document.getElementById('aa-user').value.trim().toLowerCase();
+  const pw=document.getElementById('aa-pw').value;
+  if(!name||!user||!pw){alert('Jaza sehemu zote');return;}
+  if(db.accounts.find(a=>a.username===user)){alert('Username hii tayari ipo');return;}
+  db.accounts.push({id:db.nid++,name,username:user,password:pw,role:'seller'});
+  saveDB();closeModal('add-account-modal');renderOSettings();showLoginHint();
+}
+
+// ============================
+// OWNER REPORT
+// ============================
+function renderOReport(){
+  const filtered=filterSales(oTF,'o');
+  const rev=filtered.reduce((s,m)=>s+m.total,0);
+  const cost=filtered.reduce((s,m)=>s+m.items.reduce((a,i)=>a+i.buy*i.qty,0),0);
+  const prof=rev-cost;
+  document.getElementById('o-r-stats').innerHTML=`
+    <div class="stat"><div class="stat-label">${t('revenue')}</div><div class="stat-value">TZS ${fmt(rev)}</div><div class="stat-sub">${filtered.length} ${t('txns')}</div></div>
+    <div class="stat"><div class="stat-label">${t('profit')}</div><div class="stat-value ${prof>=0?'profit-pos':'profit-neg'}">TZS ${fmt(prof)}</div></div>
+    <div class="stat"><div class="stat-label">${t('stockval')}</div><div class="stat-value">TZS ${fmt(db.drugs.reduce((s,d)=>s+d.qty*d.buy,0))}</div></div>
+    <div class="stat"><div class="stat-label">${t('colCost')}</div><div class="stat-value">TZS ${fmt(cost)}</div></div>`;
+  document.getElementById('o-r-list').innerHTML=[...filtered].reverse().map(m=>{
+    const c=m.items.reduce((a,i)=>a+i.buy*i.qty,0);const f=m.total-c;
+    return`<div class="report-row">
+      <div><div class="sale-name">${m.items.map(i=>i.name+(i.qty>1?' ×'+i.qty:'')).join(', ')}</div><div class="sale-meta">${m.seller||''} · ${m.time}</div></div>
+      <div style="text-align:right;"><div class="sale-amt">TZS ${fmt(m.total)}</div><div style="font-size:11px;" class="${f>=0?'profit-pos':'profit-neg'}">Faida: TZS ${fmt(f)}</div></div>
+    </div>`;}).join('')||`<div class="empty-d">${t('empty')}</div>`;
+}
+
+// ============================
+// OWNER SETTINGS
+// ============================
+function renderOSettings(){
+  document.getElementById('os-name').value=db.shop.name;
+  document.getElementById('os-loc').value=db.shop.location;
+  document.getElementById('os-phone').value=db.shop.phone;
+  document.getElementById('os-tin').value=db.shop.tin||'';
+  document.getElementById('os-vrn').value=db.shop.vrn||'';
+  document.getElementById('os-printer').value=db.printer.type||'browser';
+  document.getElementById('os-btname').value=db.printer.btname||'';
+  // Accounts list
+  const sellers=db.accounts.filter(a=>a.role==='seller');
+  document.getElementById('accounts-list').innerHTML=sellers.map(a=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;">
+      <div><div style="font-size:13px;font-weight:500;color:#1a2e44;">${a.name}</div><div style="font-size:11px;color:#94a3b8;">@${a.username}</div></div>
+      <button class="btn-sm btn-del" onclick="deleteAccount(${a.id})">Futa</button>
+    </div>`).join('')||'<div class="empty-w">Hakuna wauzaji wengine.</div>';
+  updateBTStatus();
+}
+function deleteAccount(id){
+  if(!confirm('Futa akaunti hii?'))return;
+  db.accounts=db.accounts.filter(a=>a.id!==id);saveDB();renderOSettings();showLoginHint();
+}
+function saveShopSettings(){
+  db.shop.name=document.getElementById('os-name').value.trim()||db.shop.name;
+  db.shop.location=document.getElementById('os-loc').value.trim()||db.shop.location;
+  db.shop.phone=document.getElementById('os-phone').value.trim();
+  db.shop.tin=document.getElementById('os-tin').value.trim();
+  db.shop.vrn=document.getElementById('os-vrn').value.trim();
+  saveDB();document.getElementById('o-dn').textContent=db.shop.name;alert('Imehifadhiwa!');
+}
+function savePrinterSettings(){
+  db.printer.type=document.getElementById('os-printer').value;
+  db.printer.btname=document.getElementById('os-btname').value.trim();
+  saveDB();
+  if(db.printer.type==='bluetooth')connectBluetooth();
+  else alert('Printer imehifadhiwa!');
+}
+
+// ============================
+// BLUETOOTH PRINTER
+// ============================
+async function connectBluetooth(){
+  if(!navigator.bluetooth){alert('Browser yako haisaidii Bluetooth. Tumia Chrome.');return;}
+  try{
+    btDevice=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:['000018f0-0000-1000-8000-00805f9b34fb']});
+    const server=await btDevice.gatt.connect();
+    const service=await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
+    btChar=await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
+    updateBTStatus();alert('✅ Bluetooth printer imeunganishwa: '+btDevice.name);
+  }catch(e){btDevice=null;btChar=null;updateBTStatus();alert('Bluetooth: '+e.message);}
+}
+function updateBTStatus(){
+  const el=document.getElementById('bt-status-display');if(!el)return;
+  if(btDevice&&btDevice.gatt.connected){el.innerHTML=`<span class="bt-status bt-connected">🟢 ${btDevice.name} — Imeunganishwa</span>`;}
+  else{el.innerHTML=`<span class="bt-status bt-disconnected">🔴 Haijaungansihwa</span><button class="btn-sm btn-add-s" onclick="connectBluetooth()" style="margin-left:8px;">Unganisha BT</button>`;}
+}
+
+async function printBluetooth(text){
+  if(!btChar){alert('Printer ya Bluetooth haijaungansihwa. Tumia print ya browser.');return false;}
+  try{
+    const enc=new TextEncoder();
+    // ESC/POS commands
+    const init=new Uint8Array([0x1B,0x40]); // Initialize
+    const cut=new Uint8Array([0x1D,0x56,0x41,0x10]); // Cut paper
+    await btChar.writeValue(init);
+    await btChar.writeValue(enc.encode(text));
+    await btChar.writeValue(cut);
+    return true;
+  }catch(e){alert('Bluetooth print error: '+e.message);return false;}
+}
+
+// ============================
+// SELLER - SELL
+// ============================
+function renderSellPage(){
+  document.getElementById('s-cart-card').style.display='none';
+  document.getElementById('s-receipt-card').style.display='none';
+  renderSellList();
+}
+function renderSellList(){
+  const q=(document.getElementById('s-search')?.value||'').toLowerCase();
+  const avail=db.drugs.filter(d=>d.qty>0&&(d.name.toLowerCase().includes(q)||d.cat.toLowerCase().includes(q)||(d.barcode||'').includes(q)));
+  document.getElementById('s-sell-list').innerHTML=avail.length?avail.map(d=>`
+    <div class="sell-item${cart[d.id]?' selected':''}" onclick="toggleCart(${d.id})">
+      <div class="sell-check"><div class="sell-check-inner"></div></div>
+      <div style="flex:1;min-width:0;"><div class="sell-iname">${d.name}</div><div class="sell-imeta">${d.cat}${d.barcode?' · 📦'+d.barcode:''}</div></div>
+      <div style="text-align:right;"><div class="sell-iprice">TZS ${fmt(d.sell)}</div><div class="sell-istock">Ipo: ${d.qty}</div></div>
+    </div>`).join(''):`<div class="empty-w">${t('nodrug')}</div>`;
+}
+function toggleCart(id){
+  if(cart[id]){delete cart[id];}else{const d=db.drugs.find(x=>x.id===id);if(d)cart[id]={drug:d,qty:1};}
+  renderSellList();updateCart();
+}
+function updateCart(){
+  const items=Object.values(cart);
+  const card=document.getElementById('s-cart-card');
+  if(!items.length){card.style.display='none';return;}
+  card.style.display='block';let total=0;
+  document.getElementById('s-cart-list').innerHTML=items.map(({drug,qty})=>{
+    const sub=drug.sell*qty;total+=sub;
+    return`<div class="cart-item">
+      <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:500;color:#1a2e44;">${drug.name}</div><div style="font-size:11px;color:#94a3b8;">TZS ${fmt(drug.sell)} × ${qty}</div></div>
+      <div class="cart-controls"><button class="qty-btn" onclick="cartQty(${drug.id},-1)">−</button><div class="qty-num">${qty}</div><button class="qty-btn" onclick="cartQty(${drug.id},1)">+</button></div>
+      <div style="font-size:12px;color:#64748b;text-align:right;min-width:70px;">TZS ${fmt(sub)}</div>
+    </div>`;}).join('');
+  document.getElementById('s-cart-total').textContent='TZS '+fmt(total);
+}
+function cartQty(id,delta){
+  if(!cart[id])return;const d=cart[id].drug;
+  cart[id].qty=Math.max(1,Math.min(d.qty,cart[id].qty+delta));updateCart();
+}
+
+// ============================
+// CONFIRM SALE + EFD RECEIPT
+// ============================
+async function confirmSale(){
+  const items=Object.values(cart);
+  if(!items.length){alert('Chagua dawa kwanza');return;}
+  for(const{drug,qty}of items){if(qty>drug.qty){alert(`Huna ${qty} ya ${drug.name}. Ipo ${drug.qty} tu.`);return;}}
+  const saleItems=items.map(({drug,qty})=>({id:drug.id,name:drug.name,qty,sell:drug.sell,buy:drug.buy,sub:drug.sell*qty}));
+  const total=saleItems.reduce((s,i)=>s+i.sub,0);
+  const vat=Math.round(total*0.18);
+  const totalExVat=total-vat;
+  const now=new Date();
+  const time=now.toLocaleString('sw',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const receiptNo='RCP-'+String(db.sid).padStart(6,'0');
+  db.sid++;
+  const sale={items:saleItems,total,time,ts:now.toISOString(),seller:currentUser?.name||'',receiptNo};
+  db.sales.push(sale);
+  saleItems.forEach(i=>{const d=db.drugs.find(x=>x.id===i.id);if(d)d.qty-=i.qty;});
+  saveDB();
+
+  // Generate QR data
+  const qrData=JSON.stringify({receipt:receiptNo,total,shop:db.shop.name,time});
+  
+  // Build EFD-style receipt HTML
+  const receiptHTML=`
+    <div class="efd-receipt" id="efd-content">
+      <div class="efd-header">
+        <div class="efd-shop">${db.shop.name.toUpperCase()}</div>
+        <div class="efd-tin">MAHALI: ${db.shop.location}</div>
+        ${db.shop.tin?`<div class="efd-tin">TIN: ${db.shop.tin}</div>`:''}
+        ${db.shop.vrn?`<div class="efd-tin">VRN: ${db.shop.vrn}</div>`:''}
+        <div class="efd-tin">TEL: ${db.shop.phone}</div>
+        <div class="efd-tin" style="margin-top:4px;font-weight:700;">STAKABADHI YA MAUZO</div>
+      </div>
+      <div class="efd-body">
+        <div class="line"><span>No:</span><span>${receiptNo}</span></div>
+        <div class="line"><span>Tarehe:</span><span>${time}</span></div>
+        <div class="line"><span>Mwuzaji:</span><span>${currentUser?.name||'—'}</span></div>
+        <div class="line-title">── BIDHAA ──────────────</div>
+        ${saleItems.map(i=>`
+          <div class="line"><span>${i.name}</span><span></span></div>
+          <div class="line"><span>&nbsp; ${i.qty} × TZS ${fmt(i.sell)}</span><span>TZS ${fmt(i.sub)}</span></div>
+        `).join('')}
+        <div class="line-title">────────────────────────</div>
+        <div class="line"><span>Jumla kabla VAT:</span><span>TZS ${fmt(totalExVat)}</span></div>
+        <div class="line"><span>VAT (18%):</span><span>TZS ${fmt(vat)}</span></div>
+      </div>
+      <div class="efd-total"><span>JUMLA KUU</span><span>TZS ${fmt(total)}</span></div>
+      <div class="efd-qr" id="qr-container-${db.sid}"></div>
+      <div class="efd-footer">
+        <div>Asante kwa kununua!</div>
+        <div>${db.shop.name} — ${db.shop.phone}</div>
+      </div>
+      <div class="efd-serial">── ${receiptNo} ── EDM v2.0 ──</div>
+    </div>
+    <div class="print-btns no-print">
+      <button class="print-btns btn-print" onclick="printReceipt()">🖨️ Print</button>
+      ${db.printer.type==='bluetooth'?`<button class="print-btns btn-bt" onclick="printBT()">📡 Bluetooth</button>`:''}
+    </div>`;
+  
+  document.getElementById('s-receipt-card').style.display='block';
+  document.getElementById('s-receipt').innerHTML=receiptHTML;
+  
+  // Generate QR code
+  try{
+    new QRCode(document.getElementById('qr-container-'+db.sid),{
+      text:qrData,width:100,height:100,colorDark:'#000',colorLight:'#fff',
+      correctLevel:QRCode.CorrectLevel.M
+    });
+  }catch(e){}
+
+  cart={};document.getElementById('s-cart-card').style.display='none';renderSellList();
+}
+
+function printReceipt(){
+  const content=document.getElementById('efd-content');
+  if(!content)return;
+  document.getElementById('print-area').innerHTML=content.outerHTML;
+  window.print();
+}
+
+async function printBT(){
+  const items=document.querySelectorAll('#efd-content .line');
+  let text='\x1B\x40'; // ESC/POS init
+  text+='\x1B\x61\x01'; // Center
+  text+=db.shop.name+'\n';
+  text+=db.shop.location+'\n';
+  if(db.shop.tin)text+='TIN: '+db.shop.tin+'\n';
+  text+='TEL: '+db.shop.phone+'\n';
+  text+='STAKABADHI YA MAUZO\n';
+  text+='\x1B\x61\x00'; // Left
+  text+='------------------------\n';
+  items.forEach(el=>{text+=el.textContent.trim()+'\n';});
+  text+='------------------------\n';
+  text+='Powered by EDM\n\n\n';
+  await printBluetooth(text);
+}
+
+// ============================
+// SELLER REPORT
+// ============================
+function renderSReport(){
+  const filtered=filterSales(sTF,'s');
+  const rev=filtered.reduce((s,m)=>s+m.total,0);
+  document.getElementById('s-r-stats').innerHTML=`
+    <div class="stat"><div class="stat-label">${t('revenue')}</div><div class="stat-value">TZS ${fmt(rev)}</div><div class="stat-sub">${filtered.length} ${t('txns')}</div></div>
+    <div class="stat"><div class="stat-label">${t('txns')}</div><div class="stat-value">${filtered.length}</div></div>`;
+  document.getElementById('s-r-list').innerHTML=[...filtered].reverse().map(m=>`
+    <div class="report-row">
+      <div><div class="sale-name">${m.receiptNo||''} · ${m.items.map(i=>i.name+(i.qty>1?' ×'+i.qty:'')).join(', ')}</div><div class="sale-meta">${m.time}</div></div>
+      <div class="sale-amt">TZS ${fmt(m.total)}</div>
+    </div>`).join('')||`<div class="empty-d">${t('empty')}</div>`;
+}
+
+// ============================
+// DOWNLOAD
+// ============================
+function dlPDF(){
+  const filtered=filterSales(oTF,'o');
+  if(!filtered.length){alert(t('empty'));return;}
+  const{jsPDF}=window.jspdf;const doc=new jsPDF();
+  const rev=filtered.reduce((s,m)=>s+m.total,0);
+  const cost=filtered.reduce((s,m)=>s+m.items.reduce((a,i)=>a+i.buy*i.qty,0),0);
+  const prof=rev-cost;
+  doc.setFontSize(14);doc.setFont(undefined,'bold');doc.text(db.shop.name,105,15,{align:'center'});
+  doc.setFontSize(9);doc.setFont(undefined,'normal');doc.text(db.shop.location+(db.shop.phone?' | '+db.shop.phone:''),105,22,{align:'center'});
+  if(db.shop.tin)doc.text('TIN: '+db.shop.tin+(db.shop.vrn?' | VRN: '+db.shop.vrn:''),105,27,{align:'center'});
+  doc.setFontSize(12);doc.setFont(undefined,'bold');doc.text('RIPOTI YA MAUZO',105,35,{align:'center'});
+  doc.setFontSize(9);doc.setFont(undefined,'normal');doc.text('Tarehe: '+new Date().toLocaleDateString(),14,42);
+  doc.line(14,45,196,45);
+  doc.setFont(undefined,'bold');doc.text('Bidhaa',14,52);doc.text('Idadi',95,52);doc.text('Jumla',120,52);doc.text('Faida',165,52);
+  doc.line(14,55,196,55);doc.setFont(undefined,'normal');let y=62;
+  filtered.forEach(m=>{
+    const c=m.items.reduce((a,i)=>a+i.buy*i.qty,0);const f=m.total-c;
+    const names=m.items.map(i=>i.name+(i.qty>1?' ×'+i.qty:'')).join(', ').substring(0,42);
+    doc.text(names,14,y);doc.text(String(m.items.reduce((a,i)=>a+i.qty,0)),95,y);
+    doc.text('TZS '+fmt(m.total),120,y);doc.text('TZS '+fmt(f),165,y);
+    y+=7;if(y>270){doc.addPage();y=20;}
+  });
+  doc.line(14,y,196,y);y+=8;doc.setFont(undefined,'bold');
+  doc.text('Jumla ya Mapato: TZS '+fmt(rev),14,y);y+=7;
+  doc.text('Gharama: TZS '+fmt(cost),14,y);y+=7;
+  doc.text('Faida Halisi: TZS '+fmt(prof),14,y);y+=10;
+  doc.setFont(undefined,'normal');doc.setFontSize(8);doc.text('Powered by EDM v2.0',105,y,{align:'center'});
+  doc.save(db.shop.name.replace(/\s+/g,'_')+'_ripoti.pdf');
+}
+
+function dlExcel(){
+  const filtered=filterSales(oTF,'o');
+  if(!filtered.length){alert(t('empty'));return;}
+  const rows=filtered.map(m=>{const c=m.items.reduce((a,i)=>a+i.buy*i.qty,0);return{
+    'Receipt No':m.receiptNo||'',Bidhaa:m.items.map(i=>i.name+(i.qty>1?' ×'+i.qty:'')).join('; '),
+    Idadi:m.items.reduce((a,i)=>a+i.qty,0),'Jumla (TZS)':m.total,'Gharama (TZS)':c,
+    'Faida (TZS)':m.total-c,'VAT (TZS)':Math.round(m.total*0.18),Mwuzaji:m.seller||'',Wakati:m.time};});
+  const ws=XLSX.utils.json_to_sheet(rows);const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Mauzo');XLSX.writeFile(wb,db.shop.name.replace(/\s+/g,'_')+'_ripoti.xlsx');
+}
+</script>
+</body>
+</html>
