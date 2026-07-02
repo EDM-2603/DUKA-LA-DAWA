@@ -6,14 +6,14 @@ const SUPABASE_KEY='sb_publishable_6n_uIo4d47pFoAQTX-47tA_Ee7fVSUr';
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 // ============================
-// SHOP TYPES CONFIG
+// SHOP TYPES
 // ============================
 const SHOP_TYPES={
   pharmacy:{icon:'💊',label:'Duka la Dawa',categories:['Painkillers','Antibiotics','Antimalarials','Vitamins','Antihypertensives','Other']},
-  spare:{icon:'🔧',label:'Spare Parts',categories:['Mafuta/Oils','Betri/Batteries','Vichujio/Filters','Polishi/Polish','Injini/Engine','Umeme/Electrical','Mwili/Body','Nyingine']},
-  grocery:{icon:'🛒',label:'Grocery',categories:['Vyakula/Food','Vinywaji/Drinks','Nafaka/Grains','Mboga/Vegetables','Matunda/Fruits','Nyingine']},
-  electronics:{icon:'📱',label:'Electronics',categories:['Simu/Phones','Kompyuta/Computers','Accessories','TV & Audio','Charging','Nyingine']},
-  clothing:{icon:'👗',label:'Mavazi',categories:['Nguo za Wanaume','Nguo za Wanawake','Watoto','Viatu/Shoes','Accessories','Nyingine']},
+  spare:{icon:'🔧',label:'Spare Parts',categories:['Mafuta/Oils','Betri/Batteries','Vichujio/Filters','Polishi','Injini/Engine','Umeme','Mwili/Body','Nyingine']},
+  grocery:{icon:'🛒',label:'Grocery',categories:['Vyakula/Food','Vinywaji/Drinks','Nafaka','Mboga','Matunda','Nyingine']},
+  electronics:{icon:'📱',label:'Electronics',categories:['Simu/Phones','Kompyuta','Accessories','TV & Audio','Charging','Nyingine']},
+  clothing:{icon:'👗',label:'Mavazi',categories:['Wanaume','Wanawake','Watoto','Viatu','Accessories','Nyingine']},
   general:{icon:'🏪',label:'Duka la Jumla',categories:['Bidhaa za Nyumbani','Vifaa','Vyakula','Vinywaji','Nyingine']}
 };
 
@@ -38,31 +38,33 @@ let delId=null,delCtx='item',asId=null;
 let rctr=1,resetEmail='',regData={shopType:'pharmacy'};
 
 // ============================
-// INIT
+// INIT — with better error handling
 // ============================
 async function init(){
+  showScreen('loading-screen');
   try{
-    const{data:shops,error}=await sb.from('shop_settings').select('*').limit(1);
-    if(error)throw error;
-    document.getElementById('loading-screen').classList.add('hidden');
-    if(shops&&shops.length){
-      // Multi-tenant: go to landing, user picks login or register
-      showScreen('landing');
-    }else{
-      showScreen('landing');
+    // Test connection first
+    const{data,error}=await sb.from('shop_settings').select('count').limit(1);
+    if(error){
+      console.error('DB Error:',error);
+      // Still show landing — user can try to register
     }
+    showScreen('landing');
   }catch(e){
-    document.getElementById('loading-screen').classList.add('hidden');
+    console.error('Init error:',e);
     showScreen('landing');
   }
 }
 
 async function loadShopData(shopId){
-  const[{data:acc},{data:dr},{data:sl}]=await Promise.all([
+  const[{data:acc,error:e1},{data:dr,error:e2},{data:sl,error:e3}]=await Promise.all([
     sb.from('accounts').select('*').eq('shop_id',shopId),
     sb.from('drugs').select('*').eq('shop_id',shopId).order('name'),
     sb.from('sales').select('*').eq('shop_id',shopId).order('created_at',{ascending:true})
   ]);
+  if(e1)console.error('Accounts error:',e1);
+  if(e2)console.error('Drugs error:',e2);
+  if(e3)console.error('Sales error:',e3);
   accounts=acc||[];
   items=dr||[];
   sales=(sl||[]).map(s=>({...s,items:typeof s.items==='string'?JSON.parse(s.items):s.items}));
@@ -70,33 +72,37 @@ async function loadShopData(shopId){
 }
 
 function setupRealtime(shopId){
-  sb.channel('shop-'+shopId)
-    .on('postgres_changes',{event:'*',schema:'public',table:'drugs',filter:`shop_id=eq.${shopId}`},async()=>{
-      const{data}=await sb.from('drugs').select('*').eq('shop_id',shopId).order('name');
-      items=data||[];
-      if(role==='owner')renderOPage(oAP);else renderSPage(sAP);
-    })
-    .on('postgres_changes',{event:'*',schema:'public',table:'sales',filter:`shop_id=eq.${shopId}`},async()=>{
-      const{data}=await sb.from('sales').select('*').eq('shop_id',shopId).order('created_at',{ascending:true});
-      sales=(data||[]).map(s=>({...s,items:typeof s.items==='string'?JSON.parse(s.items):s.items}));
-      if(role==='owner')renderOPage(oAP);else renderSPage(sAP);
-    })
-    .subscribe(status=>{
-      const ok=status==='SUBSCRIBED';
-      ['o-sync','s-sync'].forEach(id=>{
-        const el=document.getElementById(id);
-        if(el){el.className='sync-dot'+(ok?'':' off');}
+  try{
+    sb.channel('shop-'+shopId)
+      .on('postgres_changes',{event:'*',schema:'public',table:'drugs',filter:`shop_id=eq.${shopId}`},async()=>{
+        const{data}=await sb.from('drugs').select('*').eq('shop_id',shopId).order('name');
+        items=data||[];
+        if(role==='owner')renderOPage(oAP);else renderSPage(sAP);
+      })
+      .on('postgres_changes',{event:'*',schema:'public',table:'sales',filter:`shop_id=eq.${shopId}`},async()=>{
+        const{data}=await sb.from('sales').select('*').eq('shop_id',shopId).order('created_at',{ascending:true});
+        sales=(data||[]).map(s=>({...s,items:typeof s.items==='string'?JSON.parse(s.items):s.items}));
+        if(role==='owner')renderOPage(oAP);else renderSPage(sAP);
+      })
+      .subscribe(status=>{
+        const ok=status==='SUBSCRIBED';
+        ['o-sync','s-sync'].forEach(id=>{
+          const el=document.getElementById(id);
+          if(el){el.className='sync-dot'+(ok?'':' off');}
+        });
       });
-    });
+  }catch(e){console.warn('Realtime setup failed:',e);}
 }
 
 // ============================
-// SCREEN NAVIGATION
+// SCREEN NAV
 // ============================
 const SCREENS=['loading-screen','landing','register-screen','login-screen','owner-app','seller-app'];
 function showScreen(id){
-  SCREENS.forEach(s=>document.getElementById(s)?.classList.add('hidden'));
-  document.getElementById(id)?.classList.remove('hidden');
+  SCREENS.forEach(s=>{const e=document.getElementById(s);if(e)e.classList.add('hidden');});
+  const el=document.getElementById(id);
+  if(el)el.classList.remove('hidden');
+  else console.error('Screen not found:',id);
 }
 
 // ============================
@@ -135,15 +141,17 @@ function hideE(id){const e=document.getElementById(id);if(e)e.classList.add('hid
 function setBtn(id,loading,text){
   const b=document.getElementById(id);if(!b)return;
   b.disabled=loading;
-  b.innerHTML=loading?'<span class="spinner" style="width:14px;height:14px;border-width:2px;"></span>':text;
+  b.innerHTML=loading?'<span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;"></span> Tafadhali subiri...':text;
 }
 function getShopIcon(){return SHOP_TYPES[shop.shop_type]?.icon||'🏪';}
+function hideEl(id){const e=document.getElementById(id);if(e)e.classList.add('hidden');}
+function showEl(id){const e=document.getElementById(id);if(e)e.classList.remove('hidden');}
 
 // ============================
 // REGISTER
 // ============================
 let regStep=1;
-function selectType(type,icon,name){
+function selectType(type){
   regData.shopType=type;
   document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('type-'+type)?.classList.add('active');
@@ -156,7 +164,7 @@ function regNext(step){
     const loc=document.getElementById('r1-loc').value.trim();
     const phone=document.getElementById('r1-phone').value.trim();
     if(!name||!loc||!phone){showE('reg-err','Jaza sehemu zote zilizo na *');return;}
-    regData.shop={name,location:loc,phone,tin:document.getElementById('r1-tin').value.trim(),shop_type:regData.shopType};
+    regData.shop={name,location:loc,phone,tin:document.getElementById('r1-tin').value.trim(),shop_type:regData.shopType||'general'};
   }
   if(step===3){
     const oname=document.getElementById('r2-name').value.trim();
@@ -175,7 +183,6 @@ function regNext(step){
     if(!oemail.includes('@')){showE('reg-err','Email si sahihi');return;}
     regData.owner={name:oname,username:ouser,email:oemail,password:opw};
     regData.seller={name:sname,username:suser,password:spw};
-    // Show summary
     const icon=SHOP_TYPES[regData.shopType]?.icon||'🏪';
     document.getElementById('reg-summary').innerHTML=`
       <div style="margin-bottom:6px;">${icon} <strong>${regData.shop.name}</strong> — ${regData.shop.location}</div>
@@ -184,40 +191,55 @@ function regNext(step){
   }
   regStep=step;
   [1,2,3].forEach(i=>{
-    document.getElementById('reg-step'+i).classList.toggle('hidden',i!==step);
-    const el=document.getElementById('rst'+(i-1));
-    if(el)el.className='step'+(i<step?' done':i===step?' active':'');
+    const el=document.getElementById('reg-step'+i);
+    if(el)el.classList.toggle('hidden',i!==step);
+    const st=document.getElementById('rst'+(i-1));
+    if(st)st.className='step'+(i<step?' done':i===step?' active':'');
   });
   document.getElementById('reg-sub').textContent=`Hatua ${step} ya 3`;
 }
 
 async function registerShop(){
-  setBtn('reg-finish-btn',true,'');hideE('reg-err');
+  setBtn('reg-finish-btn',true,'');
+  hideE('reg-err');
   try{
-    // Create shop
-    const{data:shopRow,error:shopErr}=await sb.from('shop_settings').insert(regData.shop).select().single();
-    if(shopErr)throw shopErr;
+    // 1. Create shop
+    const{data:shopRow,error:shopErr}=await sb.from('shop_settings').insert([regData.shop]).select().single();
+    if(shopErr){
+      console.error('Shop insert error:',shopErr);
+      showE('reg-err','Hitilafu ya duka: '+shopErr.message);
+      setBtn('reg-finish-btn',false,'✅ Maliza Usajili');
+      return;
+    }
     const sid=shopRow.id;
-    // Create accounts
+    // 2. Create accounts
     const oh=await hashPw(regData.owner.password);
     const sh=await hashPw(regData.seller.password);
     const{error:accErr}=await sb.from('accounts').insert([
       {shop_id:sid,name:regData.owner.name,username:regData.owner.username,email:regData.owner.email,password_hash:oh,role:'owner'},
       {shop_id:sid,name:regData.seller.name,username:regData.seller.username,password_hash:sh,role:'seller'}
     ]);
-    if(accErr)throw accErr;
-    // Starter items based on shop type
-    const cats=SHOP_TYPES[regData.shopType]?.categories||[];
-    if(cats.length){
-      await sb.from('drugs').insert([
-        {shop_id:sid,name:'Bidhaa ya Kwanza (Mfano)',category:cats[0],buy_price:1000,sell_price:2000,quantity:10,min_quantity:3,unit:'PC'}
-      ]);
+    if(accErr){
+      console.error('Accounts error:',accErr);
+      showE('reg-err','Hitilafu ya akaunti: '+accErr.message);
+      // Cleanup shop
+      await sb.from('shop_settings').delete().eq('id',sid);
+      setBtn('reg-finish-btn',false,'✅ Maliza Usajili');
+      return;
     }
-    alert(`✅ Duka "${regData.shop.name}" limesajiliwa! Ingia sasa.`);
+    // 3. Starter item
+    const cats=SHOP_TYPES[regData.shopType]?.categories||['General'];
+    await sb.from('drugs').insert([{
+      shop_id:sid,name:'Bidhaa ya Kwanza (Mfano)',
+      category:cats[0],buy_price:1000,sell_price:2000,
+      quantity:10,min_quantity:3,unit:'PC'
+    }]);
+    alert(`✅ Duka "${regData.shop.name}" limesajiliwa kikamilifu!\n\nIngia sasa kwa:\nUsername: ${regData.owner.username}\nNenosiri: (uliloweka)`);
     showScreen('login-screen');
     document.getElementById('ln-shop').textContent=regData.shop.name;
   }catch(e){
-    showE('reg-err','Hitilafu: '+(e.message||'Jaribu tena.'));
+    console.error('Registration error:',e);
+    showE('reg-err','Hitilafu: '+(e.message||'Hakikisha una mtandao na ujaribu tena.'));
   }
   setBtn('reg-finish-btn',false,'✅ Maliza Usajili');
 }
@@ -227,8 +249,10 @@ async function registerShop(){
 // ============================
 function switchRole(r){
   loginRole=r;
-  document.getElementById('tab-o').style.cssText='flex:1;padding:9px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:500;'+(r==='owner'?'background:#fff;color:#0f4c81;box-shadow:0 1px 4px rgba(0,0,0,.12);':'background:transparent;color:#64748b;');
-  document.getElementById('tab-s').style.cssText='flex:1;padding:9px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:500;'+(r==='seller'?'background:#fff;color:#0f4c81;box-shadow:0 1px 4px rgba(0,0,0,.12);':'background:transparent;color:#64748b;');
+  const activeStyle='flex:1;padding:9px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:500;background:#fff;color:#0f4c81;box-shadow:0 1px 4px rgba(0,0,0,.12);';
+  const inactiveStyle='flex:1;padding:9px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:500;background:transparent;color:#64748b;';
+  document.getElementById('tab-o').style.cssText=r==='owner'?activeStyle:inactiveStyle;
+  document.getElementById('tab-s').style.cssText=r==='seller'?activeStyle:inactiveStyle;
 }
 
 async function doLogin(){
@@ -239,14 +263,13 @@ async function doLogin(){
   setBtn('login-btn',true,'');
   try{
     const hash=await hashPw(p);
-    // Find account across ALL shops for this username+role
     const{data:accs,error}=await sb.from('accounts').select('*').eq('username',u).eq('role',loginRole);
-    if(error)throw error;
-    const acc=accs?.find(a=>a.password_hash===hash);
-    if(!acc){showE('login-err','Jina au nenosiri si sahihi!');setBtn('login-btn',false,'Ingia');return;}
-    // Load this account's shop
-    const{data:shopData}=await sb.from('shop_settings').select('*').eq('id',acc.shop_id).single();
-    if(!shopData){showE('login-err','Duka halipatikani');setBtn('login-btn',false,'Ingia');return;}
+    if(error){showE('login-err','Hitilafu ya mtandao: '+error.message);setBtn('login-btn',false,'Ingia');return;}
+    if(!accs||accs.length===0){showE('login-err','Username haipatikani');setBtn('login-btn',false,'Ingia');return;}
+    const acc=accs.find(a=>a.password_hash===hash);
+    if(!acc){showE('login-err','Nenosiri si sahihi!');setBtn('login-btn',false,'Ingia');return;}
+    const{data:shopData,error:shopErr}=await sb.from('shop_settings').select('*').eq('id',acc.shop_id).single();
+    if(shopErr||!shopData){showE('login-err','Duka halipatikani');setBtn('login-btn',false,'Ingia');return;}
     shop=shopData;currentUser=acc;role=acc.role;
     await loadShopData(acc.shop_id);
     setupRealtime(acc.shop_id);
@@ -268,7 +291,9 @@ async function doLogin(){
 }
 
 function logout(){
-  role=null;cart={};currentUser=null;shop={};items=[];sales=[];accounts=[];
+  role=null;cart={};currentUser=null;
+  shop={id:null,name:'',location:'',phone:'',tin:'',shop_type:'general'};
+  items=[];sales=[];accounts=[];
   showScreen('landing');
 }
 
@@ -276,15 +301,13 @@ function logout(){
 // FORGOT PASSWORD
 // ============================
 function showForgot(){
-  ['login-form-area','otp-area','newpw-area'].forEach(id=>hideEl(id));
+  ['login-form-area','otp-area','newpw-area'].forEach(hideEl);
   showEl('forgot-area');hideE('forgot-err');
 }
 function showLoginForm(){
-  ['forgot-area','otp-area','newpw-area'].forEach(id=>hideEl(id));
+  ['forgot-area','otp-area','newpw-area'].forEach(hideEl);
   showEl('login-form-area');
 }
-function hideEl(id){document.getElementById(id)?.classList.add('hidden');}
-function showEl(id){document.getElementById(id)?.classList.remove('hidden');}
 
 async function sendOTP(){
   hideE('forgot-err');
@@ -292,7 +315,8 @@ async function sendOTP(){
   if(!email||!email.includes('@')){showE('forgot-err','Ingiza email sahihi');return;}
   setBtn('otp-send-btn',true,'');
   try{
-    const{data:ownerAcc}=await sb.from('accounts').select('*').eq('email',email).eq('role','owner');
+    const{data:ownerAcc,error}=await sb.from('accounts').select('*').eq('email',email).eq('role','owner');
+    if(error)throw error;
     if(!ownerAcc||!ownerAcc.length){showE('forgot-err','Email haipatikani.');setBtn('otp-send-btn',false,'📧 Tuma OTP');return;}
     const acc=ownerAcc[0];
     const otp=genOTP();
@@ -301,7 +325,6 @@ async function sendOTP(){
     resetEmail=email;
     hideEl('forgot-area');showEl('otp-area');
     document.getElementById('otp-to').textContent=email;
-    // Show OTP hint (useful since Edge Function may not be set up)
     const hint=document.getElementById('otp-hint');
     if(hint){hint.textContent=`OTP yako: ${otp} (dakika 10)`;hint.style.display='block';}
   }catch(e){showE('forgot-err','Hitilafu: '+e.message);}
@@ -314,7 +337,8 @@ async function verifyOTP(){
   if(!entered||entered.length!==6){showE('otp-err','Ingiza OTP ya tarakimu 6');return;}
   setBtn('otp-verify-btn',true,'');
   try{
-    const{data:acc}=await sb.from('accounts').select('reset_otp,otp_expires_at,id').eq('email',resetEmail).eq('role','owner').single();
+    const{data:acc,error}=await sb.from('accounts').select('reset_otp,otp_expires_at,id').eq('email',resetEmail).eq('role','owner').single();
+    if(error)throw error;
     if(!acc||acc.reset_otp!==entered){showE('otp-err','OTP si sahihi.');setBtn('otp-verify-btn',false,'✅ Thibitisha');return;}
     if(acc.otp_expires_at&&new Date(acc.otp_expires_at)<new Date()){showE('otp-err','OTP imekwisha muda. Tuma tena.');setBtn('otp-verify-btn',false,'✅ Thibitisha');return;}
     hideEl('otp-area');showEl('newpw-area');
@@ -342,24 +366,27 @@ async function resetPassword(){
 // NAV
 // ============================
 function applyNavO(){
-  const nl=t('onav');for(let i=0;i<4;i++){const e=document.getElementById('on'+i);if(e)e.textContent=nl[i];}
+  const nl=t('onav');
+  for(let i=0;i<4;i++){const e=document.getElementById('on'+i);if(e)e.textContent=nl[i];}
   renderTF('o-tf','o',oTF);
-  // Populate categories for add item form
   const cats=SHOP_TYPES[shop.shop_type]?.categories||['General'];
   const sel=document.getElementById('oi-cat');
   if(sel)sel.innerHTML=cats.map(c=>`<option value="${c}">${c}</option>`).join('');
 }
 function applyNavS(){
-  const nl=t('snav');for(let i=0;i<2;i++){const e=document.getElementById('sn'+i);if(e)e.textContent=nl[i];}
+  const nl=t('snav');
+  for(let i=0;i<2;i++){const e=document.getElementById('sn'+i);if(e)e.textContent=nl[i];}
   renderTF('s-tf','s',sTF);
 }
 function renderTF(elId,prefix,active){
   const tfs=t('tf');const vals=['day','week','month','year','custom'];
-  document.getElementById(elId).innerHTML=tfs.map((l,i)=>`<button class="tfb${active===vals[i]?' active':''}" onclick="setTF('${prefix}','${vals[i]}')">${l}</button>`).join('');
+  const el=document.getElementById(elId);
+  if(!el)return;
+  el.innerHTML=tfs.map((l,i)=>`<button class="tfb${active===vals[i]?' active':''}" onclick="setTF('${prefix}','${vals[i]}')">${l}</button>`).join('');
 }
 function setTF(p,v){
-  if(p==='o'){oTF=v;renderTF('o-tf','o',v);document.getElementById('o-cr').classList.toggle('hidden',v!=='custom');if(v!=='custom')renderOReport();}
-  else{sTF=v;renderTF('s-tf','s',v);document.getElementById('s-cr').classList.toggle('hidden',v!=='custom');if(v!=='custom')renderSReport();}
+  if(p==='o'){oTF=v;renderTF('o-tf','o',v);document.getElementById('o-cr')?.classList.toggle('hidden',v!=='custom');if(v!=='custom')renderOReport();}
+  else{sTF=v;renderTF('s-tf','s',v);document.getElementById('s-cr')?.classList.toggle('hidden',v!=='custom');if(v!=='custom')renderSReport();}
 }
 function getRange(f,p){
   const now=new Date();let from=new Date(),to=new Date();to.setHours(23,59,59,999);
@@ -383,8 +410,10 @@ function oP(id,idx){
   oAP=id;applyNavO();renderOPage(id);
 }
 function renderOPage(id){
-  if(id==='dash')renderODash();if(id==='stock')renderOStock();
-  if(id==='report')renderOReport();if(id==='settings')renderOSettings();
+  if(id==='dash')renderODash();
+  else if(id==='stock')renderOStock();
+  else if(id==='report')renderOReport();
+  else if(id==='settings')renderOSettings();
 }
 function sP(id,idx){
   document.querySelectorAll('#seller-app .page').forEach(p=>p.classList.remove('active'));
@@ -393,7 +422,10 @@ function sP(id,idx){
   document.querySelectorAll('#s-nav .bnav-btn')[idx]?.classList.add('active');
   sAP=id;applyNavS();renderSPage(id);
 }
-function renderSPage(id){if(id==='sell')renderSellPage();if(id==='sreport')renderSReport();}
+function renderSPage(id){
+  if(id==='sell')renderSellPage();
+  else if(id==='sreport')renderSReport();
+}
 
 // ============================
 // OWNER DASHBOARD
@@ -405,17 +437,25 @@ function renderODash(){
   const prof=rev-cost;
   const lc=items.filter(d=>d.quantity>0&&d.quantity<=d.min_quantity).length;
   const oc=items.filter(d=>d.quantity===0).length;
-  document.getElementById('o-stats').innerHTML=`
+  const statsEl=document.getElementById('o-stats');
+  if(statsEl)statsEl.innerHTML=`
     <div class="stat"><div class="sl">${t('stockval')}</div><div class="sv">TZS ${fmt(sv)}</div><div class="ss">${items.length} ${t('meds')}</div></div>
     <div class="stat"><div class="sl">${t('revenue')}</div><div class="sv">TZS ${fmt(rev)}</div><div class="ss">${sales.length} ${t('txns')}</div></div>
     <div class="stat"><div class="sl">${t('profit')}</div><div class="sv ${prof>=0?'pp':'pn'}">TZS ${fmt(prof)}</div></div>
     <div class="stat"><div class="sl">${t('alerts')}</div><div class="sv">${lc+oc}</div><div class="ss">${oc} ${t('out')}, ${lc} ${t('low')}</div></div>`;
-  document.getElementById('o-alerts').innerHTML=items.filter(d=>d.quantity<=d.min_quantity).map(d=>`
+  const alertsEl=document.getElementById('o-alerts');
+  if(alertsEl)alertsEl.innerHTML=items.filter(d=>d.quantity<=d.min_quantity).map(d=>`
     <div class="alrt ${d.quantity===0?'ad':'aw'}">⚠ <span><strong>${d.name}</strong> — ${d.quantity===0?t('out'):`Iliyobaki: ${d.quantity} (min ${d.min_quantity})`}</span></div>`).join('');
   const recent=[...sales].reverse().slice(0,5);
-  document.getElementById('o-recent').innerHTML=recent.length?recent.map(m=>`
-    <div class="sr"><div><div class="sn">${m.items.map(i=>i.name+(i.qty>1?' ×'+i.qty:'')).join(', ')}</div><div class="sm">${m.seller_name||''} · ${m.receipt_no} · ${new Date(m.created_at).toLocaleString('sw')}</div></div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;"><div class="sa">TZS ${fmt(m.total)}</div><button onclick="previewReceipt('${m.id}')" style="padding:3px 8px;border:none;background:rgba(255,255,255,.2);color:#fff;border-radius:6px;cursor:pointer;font-size:10px;">👁 Preview</button></div></div>`).join(''):`<div class="ed">${t('empty')}</div>`;
+  const recEl=document.getElementById('o-recent');
+  if(recEl)recEl.innerHTML=recent.length?recent.map(m=>`
+    <div class="sr">
+      <div><div class="sn">${m.items.map(i=>i.name+(i.qty>1?' ×'+i.qty:'')).join(', ')}</div><div class="sm">${m.seller_name||''} · ${m.receipt_no}</div></div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+        <div class="sa">TZS ${fmt(m.total)}</div>
+        <button onclick="previewReceipt('${m.id}')" style="padding:3px 8px;border:none;background:rgba(255,255,255,.2);color:#fff;border-radius:6px;cursor:pointer;font-size:10px;">👁 Preview</button>
+      </div>
+    </div>`).join(''):`<div class="ed">${t('empty')}</div>`;
 }
 
 // ============================
@@ -424,12 +464,17 @@ function renderODash(){
 function renderOStock(){
   const q=(document.getElementById('o-search')?.value||'').toLowerCase();
   const filtered=items.filter(d=>d.name.toLowerCase().includes(q)||(d.category||'').toLowerCase().includes(q)||(d.barcode||'').includes(q));
-  document.getElementById('o-stock-list').innerHTML=filtered.length?filtered.map(d=>{
+  const el=document.getElementById('o-stock-list');
+  if(!el)return;
+  el.innerHTML=filtered.length?filtered.map(d=>{
     const s=stOf(d);
     return`<div class="dr">
       <div style="flex:1;min-width:0;"><div class="dn">${d.name}</div><div class="dm">${d.category||''} · ${d.unit||'PC'} · Uza: TZS ${fmt(d.sell_price)} · Nunua: TZS ${fmt(d.buy_price)}</div></div>
       <div class="dr-right"><span class="badge ${s.cls}">${s.txt}</span><span style="font-size:11px;color:#94a3b8;">${d.quantity} ${d.unit||'PC'}</span>
-        <div style="display:flex;gap:4px;"><button class="btn-sm badd" onclick="openAddStockModal('${d.id}')">+ Stock</button><button class="btn-sm bdel" onclick="openDelModal('${d.id}','item')">🗑</button></div>
+        <div style="display:flex;gap:4px;">
+          <button class="btn-sm badd" onclick="openAddStockModal('${d.id}')">+ Stock</button>
+          <button class="btn-sm bdel" onclick="openDelModal('${d.id}','item')">🗑</button>
+        </div>
       </div></div>`;}).join(''):`<div class="ew">${t('empty')}</div>`;
 }
 
@@ -448,9 +493,10 @@ async function addItem(){
   };
   const{error}=await sb.from('drugs').insert(item);
   if(error){alert('Hitilafu: '+error.message);return;}
-  ['oi-name','oi-barcode','oi-buy','oi-sell','oi-qty','oi-min'].forEach(id=>document.getElementById(id).value='');
+  ['oi-name','oi-barcode','oi-buy','oi-sell','oi-qty','oi-min'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   const{data}=await sb.from('drugs').select('*').eq('shop_id',shop.id).order('name');
   items=data||[];renderOStock();
+  alert('✅ Bidhaa imeongezwa!');
 }
 
 // ============================
@@ -460,10 +506,15 @@ let modalAddStockId=null;
 function openDelModal(id,ctx){
   delId=id;delCtx=ctx;
   const d=ctx==='item'?items.find(x=>x.id===id):accounts.find(x=>x.id===id);
-  document.getElementById('del-msg').textContent='Una uhakika wa kufuta "'+(d?.name||'')+'"?';
+  const el=document.getElementById('del-msg');
+  if(el)el.textContent='Una uhakika wa kufuta "'+(d?.name||'')+'"?';
   openModal('del-modal');
 }
-function openAddStockModal(id){modalAddStockId=id;document.getElementById('as-qty').value='';openModal('add-stock-modal');}
+function openAddStockModal(id){
+  modalAddStockId=id;
+  const el=document.getElementById('as-qty');if(el)el.value='';
+  openModal('add-stock-modal');
+}
 function openModal(id){document.getElementById(id)?.classList.add('open');}
 function closeModal(id){document.getElementById(id)?.classList.remove('open');}
 
@@ -476,10 +527,12 @@ async function confirmDel(){
   closeModal('del-modal');
 }
 async function confirmAddStock(){
-  const n=parseInt(document.getElementById('as-qty').value);
+  const el=document.getElementById('as-qty');
+  const n=parseInt(el?.value);
   if(isNaN(n)||n<=0)return;
   const d=items.find(x=>x.id===modalAddStockId);if(!d)return;
-  await sb.from('drugs').update({quantity:d.quantity+n}).eq('id',modalAddStockId);
+  const{error}=await sb.from('drugs').update({quantity:d.quantity+n}).eq('id',modalAddStockId);
+  if(error){alert('Hitilafu: '+error.message);return;}
   d.quantity+=n;closeModal('add-stock-modal');renderOStock();
 }
 async function confirmAddSeller(){
@@ -493,6 +546,7 @@ async function confirmAddSeller(){
   if(error){alert('Hitilafu: '+error.message);return;}
   const{data}=await sb.from('accounts').select('*').eq('shop_id',shop.id);
   accounts=data||[];closeModal('add-seller-modal');renderOSettings();
+  alert('✅ Mwuzaji ameongezwa!');
 }
 
 // ============================
@@ -503,12 +557,14 @@ function renderOReport(){
   const rev=filtered.reduce((s,m)=>s+Number(m.total),0);
   const cost=filtered.reduce((s,m)=>s+m.items.reduce((a,i)=>a+(i.buy||0)*i.qty,0),0);
   const prof=rev-cost;
-  document.getElementById('o-r-stats').innerHTML=`
+  const statsEl=document.getElementById('o-r-stats');
+  if(statsEl)statsEl.innerHTML=`
     <div class="stat"><div class="sl">${t('revenue')}</div><div class="sv">TZS ${fmt(rev)}</div><div class="ss">${filtered.length} ${t('txns')}</div></div>
     <div class="stat"><div class="sl">${t('profit')}</div><div class="sv ${prof>=0?'pp':'pn'}">TZS ${fmt(prof)}</div></div>
     <div class="stat"><div class="sl">${t('stockval')}</div><div class="sv">TZS ${fmt(items.reduce((s,d)=>s+d.quantity*d.buy_price,0))}</div></div>
     <div class="stat"><div class="sl">Gharama</div><div class="sv">TZS ${fmt(cost)}</div></div>`;
-  document.getElementById('o-r-list').innerHTML=[...filtered].reverse().map(m=>{
+  const listEl=document.getElementById('o-r-list');
+  if(listEl)listEl.innerHTML=[...filtered].reverse().map(m=>{
     const c=m.items.reduce((a,i)=>a+(i.buy||0)*i.qty,0);const f=m.total-c;
     return`<div class="rr">
       <div><div class="sn">${m.receipt_no} · ${m.items.map(i=>i.name+(i.qty>1?' ×'+i.qty:'')).join(', ')}</div><div class="sm">${m.seller_name||''} · ${new Date(m.created_at).toLocaleString('sw')}</div></div>
@@ -524,39 +580,47 @@ function renderOReport(){
 // OWNER SETTINGS
 // ============================
 function renderOSettings(){
-  document.getElementById('os-name').value=shop.name;
-  document.getElementById('os-loc').value=shop.location||'';
-  document.getElementById('os-phone').value=shop.phone||'';
-  document.getElementById('os-tin').value=shop.tin||'';
+  const fields={
+    'os-name':shop.name,'os-loc':shop.location||'',
+    'os-phone':shop.phone||'','os-tin':shop.tin||''
+  };
+  Object.entries(fields).forEach(([id,val])=>{const e=document.getElementById(id);if(e)e.value=val;});
   const sellers=accounts.filter(a=>a.role==='seller');
-  document.getElementById('sellers-list').innerHTML=sellers.map(a=>`
+  const el=document.getElementById('sellers-list');
+  if(el)el.innerHTML=sellers.map(a=>`
     <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;">
       <div><div style="font-size:13px;font-weight:500;color:#1a2e44;">${a.name}</div><div style="font-size:11px;color:#94a3b8;">@${a.username}</div></div>
       <button class="btn-sm bdel" onclick="openDelModal('${a.id}','account')">Futa</button>
     </div>`).join('')||'<div class="ew">Hakuna wauzaji wengine.</div>';
 }
 async function saveShop(){
-  const update={name:document.getElementById('os-name').value.trim()||shop.name,
+  const update={
+    name:document.getElementById('os-name').value.trim()||shop.name,
     location:document.getElementById('os-loc').value.trim(),
     phone:document.getElementById('os-phone').value.trim(),
-    tin:document.getElementById('os-tin').value.trim()};
+    tin:document.getElementById('os-tin').value.trim()
+  };
   const{error}=await sb.from('shop_settings').update(update).eq('id',shop.id);
   if(error){alert('Hitilafu: '+error.message);return;}
-  Object.assign(shop,update);document.getElementById('o-dn').textContent=shop.name;alert('Imehifadhiwa!');
+  Object.assign(shop,update);
+  const dn=document.getElementById('o-dn');if(dn)dn.textContent=shop.name;
+  alert('✅ Imehifadhiwa!');
 }
 
 // ============================
 // SELLER — SELL
 // ============================
 function renderSellPage(){
-  document.getElementById('s-cart-card').style.display='none';
-  document.getElementById('s-receipt-card').style.display='none';
+  const cc=document.getElementById('s-cart-card');if(cc)cc.style.display='none';
+  const rc=document.getElementById('s-receipt-card');if(rc)rc.style.display='none';
   renderSellList();
 }
 function renderSellList(){
   const q=(document.getElementById('s-search')?.value||'').toLowerCase();
   const avail=items.filter(d=>d.quantity>0&&(d.name.toLowerCase().includes(q)||(d.category||'').toLowerCase().includes(q)));
-  document.getElementById('s-sell-list').innerHTML=avail.length?avail.map(d=>`
+  const el=document.getElementById('s-sell-list');
+  if(!el)return;
+  el.innerHTML=avail.length?avail.map(d=>`
     <div class="sit${cart[d.id]?' sel':''}" onclick="toggleCart('${d.id}')">
       <div class="sc"><div class="sci"></div></div>
       <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:500;color:#1a2e44;">${d.name}</div><div style="font-size:11px;color:#94a3b8;">${d.category||''} · ${d.unit||'PC'}</div></div>
@@ -571,23 +635,28 @@ function toggleCart(id){
 function updateCart(){
   const its=Object.values(cart);
   const card=document.getElementById('s-cart-card');
-  if(!its.length){card.style.display='none';return;}
-  card.style.display='block';let total=0;
-  document.getElementById('s-cart-list').innerHTML=its.map(({item,qty})=>{
+  if(!its.length){if(card)card.style.display='none';return;}
+  if(card)card.style.display='block';
+  let total=0;
+  const listEl=document.getElementById('s-cart-list');
+  if(listEl)listEl.innerHTML=its.map(({item,qty})=>{
     const sub=item.sell_price*qty;total+=sub;
     return`<div class="ci">
       <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:500;color:#1a2e44;">${item.name}</div><div style="font-size:11px;color:#94a3b8;">TZS ${fmt(item.sell_price)} × ${qty} ${item.unit||'PC'}</div></div>
       <div style="display:flex;align-items:center;gap:6px;"><button class="qb" onclick="cartQty('${item.id}',-1)">−</button><div class="qn">${qty}</div><button class="qb" onclick="cartQty('${item.id}',1)">+</button></div>
       <div style="font-size:12px;color:#64748b;text-align:right;min-width:70px;">TZS ${fmt(sub)}</div></div>`;}).join('');
-  document.getElementById('s-cart-total').textContent='TZS '+fmt(total);
+  const totalEl=document.getElementById('s-cart-total');
+  if(totalEl)totalEl.textContent='TZS '+fmt(total);
 }
 function cartQty(id,delta){
-  if(!cart[id])return;const d=cart[id].item;
-  cart[id].qty=Math.max(1,Math.min(d.quantity,cart[id].qty+delta));updateCart();
+  if(!cart[id])return;
+  const d=cart[id].item;
+  cart[id].qty=Math.max(1,Math.min(d.quantity,cart[id].qty+delta));
+  updateCart();
 }
 
 // ============================
-// RECEIPT BUILDER
+// RECEIPT
 // ============================
 function buildReceiptHTML(saleData){
   const{receipt_no,seller_name,items:sItems,total,created_at}=saleData;
@@ -596,7 +665,7 @@ function buildReceiptHTML(saleData){
   const icon=getShopIcon();
   return`<div class="rbox" id="efd-content">
     <div style="text-align:center;border-bottom:1px dashed #333;padding-bottom:8px;margin-bottom:8px;">
-      <div style="font-size:20px;margin-bottom:4px;">${icon}</div>
+      <div style="font-size:22px;margin-bottom:4px;">${icon}</div>
       <div style="font-size:13px;font-weight:700;">${shop.name.toUpperCase()}</div>
       <div style="font-size:10px;color:#555;">MAHALI: ${shop.location||''}</div>
       ${shop.tin?`<div style="font-size:10px;color:#555;">TIN: ${shop.tin}</div>`:''}
@@ -621,15 +690,14 @@ function buildReceiptHTML(saleData){
 function printReceipt(){
   const content=document.getElementById('efd-content');
   if(!content)return;
-  document.getElementById('print-area').innerHTML=content.outerHTML;
+  const pa=document.getElementById('print-area');
+  if(pa)pa.innerHTML=content.outerHTML;
   window.print();
 }
 
-// Preview any past receipt by ID (owner & seller)
 function previewReceipt(saleId){
   const sale=sales.find(s=>s.id===saleId);
   if(!sale){alert('Risiti haipatikani');return;}
-  // Show in a modal overlay
   let overlay=document.getElementById('receipt-preview-overlay');
   if(!overlay){
     overlay=document.createElement('div');
@@ -652,44 +720,56 @@ function previewReceipt(saleId){
 async function confirmSale(){
   const its=Object.values(cart);
   if(!its.length){alert('Chagua bidhaa kwanza');return;}
-  for(const{item,qty}of its){if(qty>item.quantity){alert(`Huna ${qty} ya ${item.name}. Ipo ${item.quantity} tu.`);return;}}
+  for(const{item,qty}of its){
+    if(qty>item.quantity){alert(`Huna ${qty} ya ${item.name}. Ipo ${item.quantity} tu.`);return;}
+  }
   setBtn('s-confirm-btn',true,'');
-  const saleItems=its.map(({item,qty})=>({id:item.id,name:item.name,qty,sell:Number(item.sell_price),buy:Number(item.buy_price),sub:item.sell_price*qty,unit:item.unit||'PC'}));
+  const saleItems=its.map(({item,qty})=>({
+    id:item.id,name:item.name,qty,
+    sell:Number(item.sell_price),buy:Number(item.buy_price),
+    sub:item.sell_price*qty,unit:item.unit||'PC'
+  }));
   const total=saleItems.reduce((s,i)=>s+i.sub,0);
   const receiptNo='RCP-'+String(rctr).padStart(6,'0');
   const now=new Date();
   try{
     const{data:saleRow,error:saleErr}=await sb.from('sales').insert({
-      shop_id:shop.id,receipt_no:receiptNo,seller_id:currentUser.id,
-      seller_name:currentUser.name,total,items:saleItems
+      shop_id:shop.id,receipt_no:receiptNo,
+      seller_id:currentUser.id,seller_name:currentUser.name,
+      total,items:saleItems
     }).select().single();
     if(saleErr)throw saleErr;
     for(const i of saleItems){
       const d=items.find(x=>x.id===i.id);
-      await sb.from('drugs').update({quantity:d.quantity-i.qty}).eq('id',i.id);
-      d.quantity-=i.qty;
+      if(d){
+        await sb.from('drugs').update({quantity:d.quantity-i.qty}).eq('id',i.id);
+        d.quantity-=i.qty;
+      }
     }
     rctr++;
-    // Add to local sales with created_at
     const newSale={...saleRow,items:saleItems,created_at:saleRow.created_at||now.toISOString()};
     sales.push(newSale);
-    document.getElementById('s-receipt-card').style.display='block';
-    document.getElementById('s-receipt').innerHTML=buildReceiptHTML(newSale);
-    cart={};document.getElementById('s-cart-card').style.display='none';renderSellList();
+    const rc=document.getElementById('s-receipt-card');
+    if(rc){rc.style.display='block';const rcc=document.getElementById('s-receipt');if(rcc)rcc.innerHTML=buildReceiptHTML(newSale);}
+    cart={};
+    const cc=document.getElementById('s-cart-card');if(cc)cc.style.display='none';
+    renderSellList();
   }catch(e){alert('Hitilafu: '+(e.message||'Jaribu tena.'));}
   setBtn('s-confirm-btn',false,'✅ Thibitisha Mauzo');
 }
 
 // ============================
-// SELLER REPORT (with preview)
+// SELLER REPORT
 // ============================
 function renderSReport(){
   const filtered=filterSales(sTF,'s').filter(m=>m.seller_id===currentUser.id);
   const rev=filtered.reduce((s,m)=>s+Number(m.total),0);
-  document.getElementById('s-r-stats').innerHTML=`
+  const statsEl=document.getElementById('s-r-stats');
+  if(statsEl)statsEl.innerHTML=`
     <div class="stat"><div class="sl">${t('revenue')}</div><div class="sv">TZS ${fmt(rev)}</div><div class="ss">${filtered.length} ${t('txns')}</div></div>
     <div class="stat"><div class="sl">${t('txns')}</div><div class="sv">${filtered.length}</div></div>`;
-  document.getElementById('s-r-list').innerHTML=[...filtered].reverse().map(m=>`
+  const listEl=document.getElementById('s-r-list');
+  if(listEl)listEl.innerHTML=[...filtered].reverse().map(m=>`
     <div class="rr">
       <div><div class="sn">${m.receipt_no}</div><div class="sm">${m.items.map(i=>i.name+(i.qty>1?' ×'+i.qty:'')).join(', ')}</div><div class="sm">${new Date(m.created_at).toLocaleString('sw')}</div></div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
@@ -708,41 +788,49 @@ function dlPDF(){
   const{jsPDF}=window.jspdf;const doc=new jsPDF();
   const rev=filtered.reduce((s,m)=>s+Number(m.total),0);
   const cost=filtered.reduce((s,m)=>s+m.items.reduce((a,i)=>a+(i.buy||0)*i.qty,0),0);
-  const icon=getShopIcon();
-  doc.setFontSize(14);doc.setFont(undefined,'bold');doc.text(icon+' '+shop.name,105,15,{align:'center'});
-  doc.setFontSize(9);doc.setFont(undefined,'normal');doc.text((shop.location||'')+(shop.phone?' | '+shop.phone:''),105,22,{align:'center'});
+  doc.setFontSize(14);doc.setFont(undefined,'bold');
+  doc.text(getShopIcon()+' '+shop.name,105,15,{align:'center'});
+  doc.setFontSize(9);doc.setFont(undefined,'normal');
+  doc.text((shop.location||'')+(shop.phone?' | '+shop.phone:''),105,22,{align:'center'});
   if(shop.tin)doc.text('TIN: '+shop.tin,105,27,{align:'center'});
-  doc.setFontSize(12);doc.setFont(undefined,'bold');doc.text('RIPOTI YA MAUZO',105,34,{align:'center'});
-  doc.setFontSize(9);doc.setFont(undefined,'normal');doc.text('Tarehe: '+new Date().toLocaleDateString(),14,42);
+  doc.setFontSize(12);doc.setFont(undefined,'bold');
+  doc.text('RIPOTI YA MAUZO',105,34,{align:'center'});
+  doc.setFontSize(9);doc.setFont(undefined,'normal');
+  doc.text('Tarehe: '+new Date().toLocaleDateString(),14,42);
   doc.line(14,45,196,45);
-  doc.setFont(undefined,'bold');doc.text('Bidhaa',14,52);doc.text('No.',90,52);doc.text('Jumla',115,52);doc.text('Faida',160,52);
+  doc.setFont(undefined,'bold');
+  doc.text('Bidhaa',14,52);doc.text('Receipt No',90,52);doc.text('Jumla',130,52);doc.text('Faida',170,52);
   doc.line(14,55,196,55);doc.setFont(undefined,'normal');let y=62;
   filtered.forEach(m=>{
     const c=m.items.reduce((a,i)=>a+(i.buy||0)*i.qty,0);
-    doc.text(m.items.map(i=>i.name).join(', ').substring(0,38),14,y);
+    doc.text(m.items.map(i=>i.name).join(', ').substring(0,32),14,y);
     doc.text(m.receipt_no,90,y);
-    doc.text('TZS '+fmt(m.total),115,y);doc.text('TZS '+fmt(m.total-c),160,y);
+    doc.text('TZS '+fmt(m.total),130,y);
+    doc.text('TZS '+fmt(m.total-c),170,y);
     y+=7;if(y>270){doc.addPage();y=20;}
   });
   doc.line(14,y,196,y);y+=8;doc.setFont(undefined,'bold');
   doc.text('Jumla: TZS '+fmt(rev),14,y);y+=7;
   doc.text('Faida: TZS '+fmt(rev-cost),14,y);y+=8;
-  doc.setFontSize(8);doc.setFont(undefined,'normal');doc.text('Powered by EDM POS v3.0',105,y,{align:'center'});
+  doc.setFontSize(8);doc.setFont(undefined,'normal');
+  doc.text('Powered by EDM POS v3.0',105,y,{align:'center'});
   doc.save(shop.name.replace(/\s+/g,'_')+'_ripoti.pdf');
 }
 
 function dlExcel(){
   const filtered=filterSales(oTF,'o');
   if(!filtered.length){alert(t('empty'));return;}
-  const rows=filtered.map(m=>{const c=m.items.reduce((a,i)=>a+(i.buy||0)*i.qty,0);return{
-    'Receipt No':m.receipt_no,
-    Bidhaa:m.items.map(i=>i.name+(i.qty>1?' ×'+i.qty:'')).join('; '),
-    Idadi:m.items.reduce((a,i)=>a+i.qty,0),
-    'Jumla (TZS)':m.total,'Gharama (TZS)':c,
-    'Faida (TZS)':m.total-c,'VAT (TZS)':Math.round(m.total*0.18),
-    Mwuzaji:m.seller_name||'',
-    Wakati:new Date(m.created_at).toLocaleString('sw')};});
-  const ws=XLSX.utils.json_to_sheet(rows);const wb=XLSX.utils.book_new();
+  const rows=filtered.map(m=>{
+    const c=m.items.reduce((a,i)=>a+(i.buy||0)*i.qty,0);
+    return{'Receipt No':m.receipt_no,
+      Bidhaa:m.items.map(i=>i.name+(i.qty>1?' ×'+i.qty:'')).join('; '),
+      Idadi:m.items.reduce((a,i)=>a+i.qty,0),
+      'Jumla (TZS)':m.total,'Gharama (TZS)':c,
+      'Faida (TZS)':m.total-c,'VAT (TZS)':Math.round(m.total*0.18),
+      Mwuzaji:m.seller_name||'',
+      Wakati:new Date(m.created_at).toLocaleString('sw')};});
+  const ws=XLSX.utils.json_to_sheet(rows);
+  const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Mauzo');
   XLSX.writeFile(wb,shop.name.replace(/\s+/g,'_')+'_ripoti.xlsx');
 }
