@@ -1,4 +1,4 @@
-const CACHE_NAME='duka-la-dawa-v1';
+const CACHE_NAME='edm-pos-v3';
 const ASSETS=['./index.html','./app.js','./manifest.json','./icon-192.png','./icon-512.png'];
 
 self.addEventListener('install',e=>{
@@ -13,18 +13,13 @@ self.addEventListener('activate',e=>{
   self.clients.claim();
 });
 
-// Network-first for everything (so sales data is always fresh when online),
-// fallback to cache only for the app shell when offline.
 self.addEventListener('fetch',e=>{
   if(e.request.method!=='GET')return;
-  // Don't cache Supabase API calls
-  if(e.request.url.includes('supabase.co')){
-    return;
-  }
+  if(e.request.url.includes('supabase.co')||e.request.url.includes('jsdelivr')||e.request.url.includes('cloudflare'))return;
   e.respondWith(
     fetch(e.request).then(res=>{
-      const resClone=res.clone();
-      caches.open(CACHE_NAME).then(cache=>cache.put(e.request,resClone));
+      const clone=res.clone();
+      caches.open(CACHE_NAME).then(cache=>cache.put(e.request,clone));
       return res;
     }).catch(()=>caches.match(e.request))
   );

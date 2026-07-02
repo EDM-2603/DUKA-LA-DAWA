@@ -1,7 +1,7 @@
 {
-  "name": "Duka la Dawa - Mfumo wa Mauzo",
-  "short_name": "Duka la Dawa",
-  "description": "Mfumo wa Mauzo - Duka la Dawa, Powered by EDM",
+  "name": "EDM POS — Mfumo wa Maduka",
+  "short_name": "EDM POS",
+  "description": "Multi-tenant Point of Sale System, Powered by EDM",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f4c81",
